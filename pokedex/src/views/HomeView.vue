@@ -1,4 +1,5 @@
 <template>
+  <MainWeb></MainWeb>
   <!-- ของเดิมที่ loop pokemon -->
   <div class="container p-4">
     <div class="flex flex-col gap-6">
@@ -70,6 +71,7 @@ import type { pokemonResponse, pokemonDetail } from '@/models/pokemon.model'
 import { getPokemons, getPokemonDetail } from '@/services/pokemon.service'
 import PokemonCard from '@/components/PokemonCard.vue'
 import axios from 'axios'
+import MainWeb from '@/components/MainWeb.vue'
 
 const data = ref<pokemonResponse>({
   count: 0,
