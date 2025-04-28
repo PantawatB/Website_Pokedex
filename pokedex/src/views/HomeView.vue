@@ -1,130 +1,155 @@
 <template>
-  <MainWeb></MainWeb>
-  <!-- ของเดิมที่ loop pokemon -->
-  <div class="container p-4">
-    <div class="flex flex-col gap-6">
-      <div class="text-center text-2xl font-bold">Pokemon</div>
-      <div>
-        <div class="text-lg font-semibold mb-2">Pokemon List</div>
-        <div class="grid grid-cols-2 sm:grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-4">
-          <div
-            v-for="(pokemon, index) in data.results"
-            :key="index"
-            class="border text-center border-black rounded-lg p-4 shadow hover:shadow-md"
-          >
-            {{ pokemon.name }}
+  <div class="min-h-screen bg-gray-100">
+    <MainWeb></MainWeb>
+    <!-- หน้าเรื่องราว Pokémon -->
+    <div class="mt-6 p-6 rounded-lg shadow-lg space-y-10">
+      <!-- หัวข้อหลัก -->
+      <div class="text-center fade-in">
+        <h2 class="text-3xl font-bold mb-2">เรื่องราวของ Pokémon</h2>
+        <p class="text-gray-600 text-lg">โลกแห่งการผจญภัยและมิตรภาพกับโปเกมอน</p>
+      </div>
+
+      <!-- เนื้อเรื่องเบื้องต้น -->
+      <div class="space-y-4 text-gray-700 leading-relaxed text-justify fade-in">
+        <p>
+          Pokémon (Pocket Monsters) คือสิ่งมีชีวิตลึกลับที่มีพลังพิเศษ
+          พวกมันอยู่ร่วมกับมนุษย์ในโลกแห่งการผจญภัย เทรนเนอร์จะจับ ฝึกฝน และออกเดินทางร่วมกับโปเกมอน
+          เพื่อสร้างสายสัมพันธ์และแข่งต่อสู้กับคนอื่น
+        </p>
+        <p>
+          จุดเริ่มต้นของ Pokémon เริ่มต้นในปี 1996 ที่ประเทศญี่ปุ่นผ่านเกมบอย (Game Boy)
+          และขยายตัวอย่างรวดเร็วไปทั่วโลก ทั้งในรูปแบบเกม, การ์ตูนอนิเมะ, หนัง, ของเล่น และอื่นๆ
+          อีกมากมาย
+        </p>
+      </div>
+
+      <!-- รูป Pikachu -->
+      <div class="text-center fade-in">
+        <img
+          src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/25.png"
+          alt="Pikachu"
+          class="mx-auto w-28 h-28"
+        />
+        <p class="mt-2 text-sm text-gray-500 italic">
+          "Pikachu" – โปเกมอนที่เป็นไอคอนของโลก Pokémon
+        </p>
+      </div>
+
+      <!-- ประวัติ Timeline -->
+      <div class="fade-in">
+        <h3 class="text-2xl font-bold mb-4">เส้นทางแห่งตำนาน Pokémon</h3>
+        <ul class="space-y-2 text-gray-700">
+          <li>• 1996 - Pokémon Red และ Green วางจำหน่ายที่ญี่ปุ่น</li>
+          <li>• 1997 - การ์ตูน Pokémon ออกอากาศครั้งแรก</li>
+          <li>• 1998 - Pokémon เปิดตัวในอเมริกาและกลายเป็นกระแสทั่วโลก</li>
+          <li>• 2006 - Pokémon Diamond และ Pearl เปิดตัวใน Nintendo DS</li>
+          <li>• 2016 - Pokémon Go สร้างปรากฏการณ์การจับโปเกมอนในโลกจริง</li>
+          <li>• 2022 - Pokémon Scarlet และ Violet เปิดตัวโลกแบบ Open World</li>
+        </ul>
+      </div>
+
+      <!-- Top 5 Pokémon ยอดนิยม -->
+      <div class="fade-in">
+        <h3 class="text-2xl font-bold mb-4">Top 5 Pokémon ขวัญใจแฟนๆ</h3>
+        <div class="grid grid-cols-2 md:grid-cols-5 gap-4 text-center">
+          <div v-for="id in [25, 1, 6, 150, 151]" :key="id" class="space-y-2">
+            <img
+              :src="`https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${id}.png`"
+              class="mx-auto w-20 h-20 transition-transform duration-500 ease-in-out hover:scale-110"
+              alt="Popular Pokémon"
+            />
+            <div class="capitalize text-sm text-gray-600">{{ getPokemonName(id) }}</div>
+            <button
+              class="bg-blue-500 text-white py-1 px-4 rounded-full mt-2 hover:bg-blue-400 transition-all"
+              @click="showDetails(id)"
+            >
+              ดูรายละเอียด
+            </button>
           </div>
         </div>
       </div>
 
-      <!--ส่วนค้นหาข้อมูลโปเกมอนด้วย ID -->
-      <div>
-        <div class="text-lg font-semibold mt-6">ค้นหา Pokemon ด้วย ID</div>
-        <div class="flex gap-2 items-center my-2">
-          <input
-            v-model.number="inputId"
-            type="number"
-            placeholder="ใส่ Pokémon ID"
-            class="border px-2 py-1 rounded"
-          />
-          <button
-            @click="getPokemonById"
-            class="bg-blue-500 text-white px-4 py-1 rounded hover:bg-blue-600"
+      <!-- Carousel โปเกมอน -->
+      <div class="fade-in">
+        <h3 class="text-2xl font-bold mb-4">Pokémon Highlight</h3>
+        <div class="flex overflow-x-auto gap-4 p-2">
+          <div
+            v-for="id in [4, 7, 1, 25, 39, 150, 151]"
+            :key="id"
+            class="flex-shrink-0 w-32 h-32 rounded-lg shadow-md bg-gray-100 flex flex-col items-center justify-center transition-all duration-500 ease-in-out transform hover:scale-110"
           >
-            ค้นหา
-          </button>
-        </div>
-
-        <div v-if="selectedPokemon" class="mt-4 border p-4 rounded shadow text-center w-64">
-          <img
-            :src="`https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${selectedPokemon.id}.png`"
-            alt="pokemon"
-            class="mx-auto mb-2"
-          />
-          <div class="text-lg font-semibold capitalize">{{ selectedPokemon.name }}</div>
-          <div>ID: {{ selectedPokemon.id }}</div>
-          <div>Base Exp: {{ selectedPokemon.base_experience }}</div>
-          <div>Height: {{ selectedPokemon.height }}</div>
-          <div>Weight: {{ selectedPokemon.weight }}</div>
+            <img
+              :src="`https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${id}.png`"
+              class="w-16 h-16"
+              alt="Pokémon Carousel"
+            />
+            <div class="mt-2 text-xs capitalize">{{ getPokemonName(id) }}</div>
+          </div>
         </div>
       </div>
+    </div>
 
-      <!-- ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////// -->
-
-      <div v-if="fullPokemonList.length > 0">
-        <div class="text-lg font-semibold mt-10 mb-2">Selected Pokemon</div>
-        <PokemonCard :pokemon="fullPokemonList[2]" />
-        <div class="text-lg font-semibold mt-10 mb-2">Pokemon ID 1-150</div>
-        <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
-          <PokemonCard v-for="item in fullPokemonList" :key="item.id" :pokemon="item" />
-        </div>
+    <!-- Pokémon Details Modal -->
+    <div
+      v-if="selectedPokemon"
+      class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+    >
+      <div class="bg-white p-6 rounded-lg shadow-lg w-80">
+        <h2 class="text-xl font-bold mb-4">{{ getPokemonName(selectedPokemon) }}</h2>
+        <img
+          :src="`https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${selectedPokemon}.png`"
+          alt="Pokemon"
+          class="mx-auto w-32 h-32 mb-4"
+        />
+        <p class="text-gray-700 mb-4">รายละเอียดเกี่ยวกับ {{ getPokemonName(selectedPokemon) }}</p>
+        <button
+          @click="selectedPokemon = null"
+          class="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-400"
+        >
+          ปิด
+        </button>
       </div>
-
-      <!-- ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////// -->
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
-import type { pokemonResponse, pokemonDetail } from '@/models/pokemon.model'
-import { getPokemons, getPokemonDetail } from '@/services/pokemon.service'
-import PokemonCard from '@/components/PokemonCard.vue'
-import axios from 'axios'
 import MainWeb from '@/components/MainWeb.vue'
-
-const data = ref<pokemonResponse>({
-  count: 0,
-  next: null,
-  previous: null,
-  results: [],
-})
-
-const showPokemon = async () => {
-  const res = await getPokemons()
-  data.value = res.data
+const pokemonNames: Record<number, string> = {
+  1: 'bulbasaur',
+  4: 'charmander',
+  6: 'charizard',
+  7: 'squirtle',
+  25: 'pikachu',
+  39: 'jigglypuff',
+  150: 'mewtwo',
+  151: 'mew',
 }
 
-const inputId = ref<number>(1) //ตอนเริ่มเป็น 1 เพราะตัว 0 ไม่มี และเป็น number
-const selectedPokemon = ref<pokemonDetail | null>(null) // ตอนเริ่มไม่มีค่า และเป็น pokemonDetail
+let selectedPokemon: number | null = null
 
-const getPokemonById = async () => {
-  try {
-    const res = await getPokemonDetail(inputId.value)
-    selectedPokemon.value = res.data
-  } catch {
-    alert('ไม่พบโปเกมอนที่มี ID นี้')
-    selectedPokemon.value = null
-  }
+const getPokemonName = (id: number) => {
+  return pokemonNames[id] || 'unknown'
 }
-///////////////// ่ส่วนของการ loop pokemon 150 ตัว [fullPokemonList]
-const fullPokemonList = ref<pokemonDetail[]>([]) //fullPokemonList เป็น PokemonDetail ที่เป็น array
 
-const first150Pokemon = async () => {
-  // ฟังก์ชั่นใหญ่ที่ต้องใส่ await first150Pokemon() เพื่อรอให้เสร็จ
-  const limit = 150 //จํานวน pokemon ที่ต้องการสูงสุด 150 ตัว max 1025
-  const all150FirstPokemon = []
-
-  for (let id = 1; id <= limit; id++) {
-    all150FirstPokemon.push(axios.get(`https://pokeapi.co/api/v2/pokemon/${id}`))
-  }
-  const finish150PokemonList = await Promise.all(all150FirstPokemon) //รอให้ดึง pokemon ทั้งหมดเสร็จ
-  fullPokemonList.value = finish150PokemonList.map((res) => ({
-    //เอาค่าที่อยากใช้ไปไว้ใน fullPokemonList
-    id: res.data.id,
-    name: res.data.name,
-    base_experience: res.data.base_experience, //ข้อมูลที่ดึงมาจะอยู่ใน res.data
-    height: res.data.height,
-    weight: res.data.weight,
-  }))
+const showDetails = (id: number) => {
+  selectedPokemon = id
 }
-///////////////// ่ส่วนของการ loop pokemon 150 ตัว [fullPokemonList]
-
-// เมื่อ component โหลด
-onMounted(async () => {
-  await showPokemon() // loop pokemon แรก
-  await getPokemonById() // ค้นหาโปเกมอนด้วย ID
-  await first150Pokemon() // ค้นหาโปเกมอน ID 1-150
-  console.log('mounted')
-})
 </script>
+
+<style scoped>
+/* Animation Effect */
+.fade-in {
+  opacity: 0;
+  animation: fadeIn 1s forwards;
+}
+
+@keyframes fadeIn {
+  0% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+</style>

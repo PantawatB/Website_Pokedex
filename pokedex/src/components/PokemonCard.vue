@@ -14,7 +14,7 @@
 </template>
 
 <script setup lang="ts">
-import type { pokemonDetail } from '@/models/pokemon.model'
+import type { PokemonDetail } from '@/models/pokemon.model'
 
-defineProps<{ pokemon: pokemonDetail }>()
+defineProps<{ pokemon: PokemonDetail }>()
 </script>

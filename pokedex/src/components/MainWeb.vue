@@ -1,19 +1,29 @@
 <template>
-  <nav class="flex items-center p-6">
+  <nav class="flex items-center">
     <router-link to="/">
       <img
         src="../assets/Photos/Pokedex_logo.png"
         alt="Pokedex Logo"
         style="width: 145px; height: auto"
-        class="ml-6 mt-2"
+        class="ml-[55px] mt-[30px]"
       />
     </router-link>
-    <ul class="flex mt-1 ml-[550px] space-x-[100px] text-base font-extrabold">
-      <li><a href="#" class="hover:text-black hover:scale-140 transition-all">Home</a></li>
-      <li><a href="#" class="hover:text-black hover:scale-140 transition-all">List Pokemon</a></li>
-      <li><a href="#" class="hover:text-black hover:scale-140 transition-all">Mini Game</a></li>
-      <li><a href="#" class="hover:text-black hover:scale-140 transition-all">Contact me</a></li>
-      <li><a href="#" class="hover:text-black hover:scale-140 transition-all">Tutorial</a></li>
+    <ul class="flex mt-[30px] ml-[550px] space-x-[100px] text-base font-semibold">
+      <router-link to="/home" class="hover:text-black hover:scale-160 transition-all">
+        <li>Home</li>
+      </router-link>
+      <li class="hover:text-black hover:scale-160 transition-all">
+        <router-link :to="{ name: 'listpokemon' }">List Pokemon</router-link>
+      </li>
+      <li class="hover:text-black hover:scale-160 transition-all">
+        <router-link to="/mini-game">Mini Game</router-link>
+      </li>
+      <li class="hover:text-black hover:scale-160 transition-all">
+        <router-link to="/contactme">Contact me</router-link>
+      </li>
+      <li class="hover:text-black hover:scale-160 transition-all">
+        <router-link to="/tutorial">Tutorial</router-link>
+      </li>
     </ul>
   </nav>
 </template>
