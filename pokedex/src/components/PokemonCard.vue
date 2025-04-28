@@ -1,5 +1,5 @@
 <template>
-  <div class="border text-center border-gray-300 rounded-lg p-4 shadow hover:shadow-md">
+  <div class="border text-center bg-white rounded-lg shadow-md p-4 hover:shadow-lg">
     <img
       :src="`https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${pokemon.id}.png`"
       alt="pokemon"

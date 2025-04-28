@@ -52,7 +52,11 @@
       <div class="fade-in">
         <h3 class="text-2xl font-bold mb-4">Top 5 Pokémon ขวัญใจแฟนๆ</h3>
         <div class="grid grid-cols-2 md:grid-cols-5 gap-4 text-center">
-          <div v-for="id in [25, 1, 6, 150, 151]" :key="id" class="space-y-2">
+          <div
+            v-for="id in [25, 1, 6, 150, 151]"
+            :key="id"
+            class="bg-white rounded-lg p-6 shadow-md space-y-2"
+          >
             <img
               :src="`https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${id}.png`"
               class="mx-auto w-20 h-20 transition-transform duration-500 ease-in-out hover:scale-110"
@@ -60,7 +64,7 @@
             />
             <div class="capitalize text-sm text-gray-600">{{ getPokemonName(id) }}</div>
             <button
-              class="bg-blue-500 text-white py-1 px-4 rounded-full mt-2 hover:bg-blue-400 transition-all"
+              class="bg-slate-600 text-white rounded-lg shadow-md py-1 px-4 mt-2 hover:bg-slate-800 transition-all"
               @click="showDetails(id)"
             >
               ดูรายละเอียด
@@ -76,7 +80,7 @@
           <div
             v-for="id in [4, 7, 1, 25, 39, 150, 151]"
             :key="id"
-            class="flex-shrink-0 w-32 h-32 rounded-lg shadow-md bg-gray-100 flex flex-col items-center justify-center transition-all duration-500 ease-in-out transform hover:scale-110"
+            class="flex-shrink-0 bg-white p-6 w-32 h-32 rounded-lg shadow-md flex flex-col items-center justify-center transition-all duration-500 ease-in-out transform hover:scale-110"
           >
             <img
               :src="`https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${id}.png`"
@@ -102,6 +106,11 @@
           class="mx-auto w-32 h-32 mb-4"
         />
         <p class="text-gray-700 mb-4">รายละเอียดเกี่ยวกับ {{ getPokemonName(selectedPokemon) }}</p>
+        <div v-if="pokemonDetails[selectedPokemon]">
+          <p><strong>ประเภท:</strong> {{ pokemonDetails[selectedPokemon].type.join(', ') }}</p>
+          <p><strong>ความสูง:</strong> {{ pokemonDetails[selectedPokemon].height }} m</p>
+          <p><strong>น้ำหนัก:</strong> {{ pokemonDetails[selectedPokemon].weight }} kg</p>
+        </div>
         <button
           @click="selectedPokemon = null"
           class="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-400"
@@ -115,6 +124,7 @@
 
 <script setup lang="ts">
 import MainWeb from '@/components/MainWeb.vue'
+
 const pokemonNames: Record<number, string> = {
   1: 'bulbasaur',
   4: 'charmander',
@@ -127,6 +137,17 @@ const pokemonNames: Record<number, string> = {
 }
 
 let selectedPokemon: number | null = null
+
+const pokemonDetails: Record<number, { type: string[]; height: number; weight: number }> = {
+  1: { type: ['grass', 'poison'], height: 0.7, weight: 6.9 },
+  4: { type: ['fire'], height: 0.6, weight: 8.5 },
+  6: { type: ['fire', 'flying'], height: 1.7, weight: 90.5 },
+  7: { type: ['water'], height: 0.6, weight: 8.5 },
+  25: { type: ['electric'], height: 0.4, weight: 6.0 },
+  39: { type: ['fairy'], height: 0.5, weight: 5.5 },
+  150: { type: ['psychic'], height: 2.0, weight: 122.0 },
+  151: { type: ['psychic'], height: 0.4, weight: 7.0 },
+}
 
 const getPokemonName = (id: number) => {
   return pokemonNames[id] || 'unknown'

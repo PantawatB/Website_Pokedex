@@ -11,7 +11,7 @@
             <div
               v-for="(pokemon, index) in data.results"
               :key="index"
-              class="border text-center border-black rounded-lg p-4 shadow hover:shadow-md"
+              class="border text-center border-black bg-white rounded-lg shadow-md p-4 hover:shadow-md"
             >
               {{ pokemon.name }}
             </div>
@@ -36,7 +36,10 @@
             </button>
           </div>
 
-          <div v-if="selectedPokemon" class="mt-4 border p-4 rounded shadow text-center w-64">
+          <div
+            v-if="selectedPokemon"
+            class="mt-4 border p-4 rounded bg-white shadow text-center w-64"
+          >
             <img
               :src="`https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${selectedPokemon.id}.png`"
               alt="pokemon"
