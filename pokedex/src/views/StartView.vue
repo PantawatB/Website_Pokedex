@@ -13,7 +13,9 @@
           the user experience.
         </p>
         <router-link to="/home">
-          <button class="bg-black text-white px-6 py-3 text-lg rounded-xl hover:bg-gray-800">
+          <button
+            class="bg-black text-white px-6 py-3 text-lg rounded-xl hover:bg-gray-800 hover:scale-105"
+          >
             Get Started
           </button>
         </router-link>

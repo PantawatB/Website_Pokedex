@@ -8,10 +8,33 @@
       <div class="flex items-center gap-4">
         <input
           type="text"
+          v-model="searchkey"
           placeholder="Search your Pokémon!"
           class="flex-1 p-3 rounded-md shadow-md border border-gray-300"
         />
-        <button class="p-3 bg-red-500 rounded-full text-white">
+        <!-- ถ้ามีการ search ให้โชว์ปุ่มขึ้นมา -->
+        <!-- ปุ่มสำหรับ clear search X -->
+        <button
+          @click="searchkey = ''"
+          v-if="searchkey"
+          class="p-3 bg-gray-500 rounded-full text-white"
+          title="Clear search"
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            class="h-5 w-5"
+            viewBox="0 0 20 20"
+            fill="currentColor"
+          >
+            <path
+              fill-rule="evenodd"
+              d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
+              clip-rule="evenodd"
+            />
+          </svg>
+        </button>
+
+        <div class="p-3 bg-red-500 rounded-full text-white">
           <svg
             xmlns="http://www.w3.org/2000/svg"
             class="h-5 w-5"
@@ -24,7 +47,12 @@
               clip-rule="evenodd"
             />
           </svg>
-        </button>
+        </div>
+      </div>
+
+      <!-- ตัวนับว่าเจอกี่ตัว Trim()<ตัวลบช่องว่าง> -->
+      <div v-if="searchkey.trim()" class="mt-4 text-gray-600">
+        Found {{ filteredPokemonList.length }} Pokémon matching "{{ searchkey }}"
       </div>
 
       <!-- Filters -->
@@ -56,7 +84,18 @@
         <!-- Left Grid -->
         <div class="flex-1 grid grid-cols-3 gap-6">
           <div
-            v-for="item in fullPokemonList"
+            v-if="filteredPokemonList.length === 0 && searchkey.trim()"
+            class="col-span-3 text-center py-10"
+          >
+            <div class="text-xl font-semibold text-gray-500">
+              No Pokémon found matching "{{ searchkey }}"
+            </div>
+            <button @click="searchkey = ''" class="mt-4 px-4 py-2 bg-red-500 text-white rounded-md">
+              Clear Search
+            </button>
+          </div>
+          <div
+            v-for="item in filteredPokemonList"
             :key="item.id"
             class="bg-white p-4 rounded-lg shadow-md flex flex-col items-center"
           >
@@ -145,9 +184,23 @@
 <script setup lang="ts">
 import MainWeb from '@/components/MainWeb.vue'
 import axios from 'axios'
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, computed } from 'vue'
 import type { PokemonDetail } from '@/models/pokemon.model'
 const fullPokemonList = ref<PokemonDetail[]>([]) //fullPokemonList เป็น PokemonDetail ที่เป็น array
+const searchkey = ref('')
+
+// Computed
+const filteredPokemonList = computed(() => {
+  if (!searchkey.value.trim()) {
+    return fullPokemonList.value // ไม่มี search ให้โชว์ทั้งหมด
+  }
+
+  const keyword = searchkey.value.toLowerCase().trim() //ปรับเป็นตัวเล็กเอาช่องว่างออก
+  return fullPokemonList.value.filter(
+    (pokemon) =>
+      pokemon.name.toLowerCase().includes(keyword) || pokemon.id.toString().includes(keyword),
+  )
+})
 
 const all1025Pokemon = async () => {
   // ฟังก์ชั่นใหญ่ที่ต้องใส่ await first150Pokemon() เพื่อรอให้เสร็จ
