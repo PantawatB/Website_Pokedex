@@ -130,6 +130,6 @@ onMounted(async () => {
   await showPokemon() // loop pokemon แรก
   await getPokemonById() // ค้นหาโปเกมอนด้วย ID
   await first150Pokemon() // ค้นหาโปเกมอน ID 1-150
-  console.log('mounted')
+  // console.log('mounted')
 })
 </script>
