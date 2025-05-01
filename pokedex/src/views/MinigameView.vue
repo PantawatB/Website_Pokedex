@@ -72,6 +72,9 @@
 
           <!-- แสดงประเภทของโปเกมอน เมื่อเฉลยแล้ว -->
           <div v-if="revealed && currentPokemon" class="flex gap-2 mt-3">
+            <!-- แสดง <div> นี้ เฉพาะเมื่อโปเกมอนถูกเปิดแล้ว -->
+            <!-- วนลูปแสดงประเภทของโปเกมอนที่มีหลาย type -->
+            <!-- คลาส CSS เฉพาะสำหรับแต่ละ type -->
             <span
               v-for="(typeObj, index) in currentPokemon.types"
               :key="index"
@@ -84,25 +87,29 @@
         </div>
 
         <!-- ข้อความแจ้งว่า (ถูก/ผิด) -->
+        <!-- แสดง <div> นี้ เฉพาะเมื่อได้รับแแจ้งว่ามี feedbackMessage -->
         <div v-if="feedbackMessage" class="mb-4 text-center p-2 rounded-lg" :class="feedbackClass">
           {{ feedbackMessage }}
         </div>
 
         <!-- ปุ่มตัวเลือกคำตอบแบบหลายตัวเลือก -->
+        <!-- แสดง <div> นี้เฉพาะเมื่อยังไม่เฉลยและยังไม่จบเกม -->
         <div v-if="!revealed && !gameOver" class="grid grid-cols-2 gap-3 mb-4">
           <button
             v-for="(option, index) in pokemonOptions"
             :key="index"
             @click="checkAnswer(option)"
-            class="bg-white border border-gray-300 px-4 py-3 rounded-lg hover:bg-blue-50 transition-colors text-center capitalize font-medium"
+            class="bg-white border border-gray-400 px-4 py-3 rounded-lg hover:bg-gray-200 transition-colors text-center capitalize font-medium"
             :class="{ 'opacity-50 cursor-not-allowed': revealed }"
             :disabled="revealed"
           >
+            <!-- เฉลยแล้วจะปิดปุ่ม -->
             {{ option }}
           </button>
         </div>
 
         <!-- ปุ่มเพื่อเล่นรอบถัดไป -->
+        <!-- แสดง <div> นี้ตอน เฉลยแล้วและไม่จบเกม -->
         <div class="flex justify-center mb-4">
           <button
             v-if="revealed && !gameOver"
@@ -112,8 +119,19 @@
             Next Pokémon
           </button>
         </div>
+        <!--
+        <div class="flex justify-center mb-4">
+          <button
+            v-if="!revealed && !gameOver"
+            @click="getNewPokemon"
+            class="bg-slate-800 text-white px-6 py-2 rounded-lg hover:bg-slate-700 transition-colors"
+          >
+            Helper if image not show (Dev mode)
+          </button>
+        </div> -->
 
         <!-- หน้าจอ Game Over -->
+        <!-- แสดง <div> นี้ตอน จบเกม -->
         <div v-if="gameOver" class="text-center mb-4">
           <div class="text-xl font-bold text-red-500 mb-3">Game Over!</div>
           <div class="mb-4">Final Score: {{ score }}</div>
@@ -131,7 +149,7 @@
         <h2 class="text-xl font-bold mb-2">How to Play</h2>
         <ul class="list-disc pl-5 space-y-1">
           <li>A silhouette of a Pokémon will be shown</li>
-          <li>Choose the correct Pokémon name from the four options</li>
+          <li>Choose the correct Pokémon name from 4 options</li>
           <li>Earn 10 points for each correct answer</li>
           <li>You have 3 lives (❤️) - lose one for each wrong answer</li>
           <li>Game ends when you lose all lives (🖤)</li>
@@ -222,14 +240,18 @@ interface PokemonListResponse {
   results: PokemonListItem[]
 }
 
-// ดึงชื่อโปเกมอนแบบสุ่ม (ไม่ซ้ำและไม่ซ้ำคำตอบที่ถูก)
+// สุ่มชื่อโปเกมอนตัวที่ผิด
 const getRandomPokemonNames = async (correctName: string, count: number = 3) => {
+  // รับชื่อที่ถูกต้องมาสำหรับการรันคำสั่งและ สุ่มคำตอบที่ผิดโดยกำหนดค่า count (โดยเริ่มต้นเป็น 3 )
   if (allPokemonNames.value.length > 0) {
-    const options: string[] = []
+    // ถ้ามีข้อมูลใน allPokemonNames (มีการดึงข้อมูลตอน onMounted สำเร็จแล้ว)
+    const options: string[] = [] //สร้าง options เป็น array เพื่อสุ่มเก็บชื่อโปเกม่อนตัวที่ผิด
     while (options.length < count) {
-      const randomIndex = Math.floor(Math.random() * allPokemonNames.value.length)
-      const name = allPokemonNames.value[randomIndex]
+      // ยังสุ่มไม่เต็ม options ก็ให้สุ่มอีก
+      const randomIndex = Math.floor(Math.random() * allPokemonNames.value.length) // สุ่มตัวเลขจากใน length ของ allPokemonNames
+      const name = allPokemonNames.value[randomIndex] // นำ randomIndex ไปไว้ใน name เอาชื่อโปเกม่อน
       if (name !== correctName && !options.includes(name)) {
+        // ตรวจ name ต้องไม่ตรงกับชื่อที่ถูก และ ไม่ซ้ำกับ options ที่มีอยู่แล้ว
         options.push(name)
       }
     }
@@ -240,20 +262,21 @@ const getRandomPokemonNames = async (correctName: string, count: number = 3) => 
         'https://pokeapi.co/api/v2/pokemon?limit=151',
       )
       allPokemonNames.value = response.data.results.map((p) => p.name)
-      return getRandomPokemonNames(correctName, count)
+      return getRandomPokemonNames(correctName, count) //ถ้าไม่มีโปเกม่อนใน allPokemonNames ให้ไปโหลดข้อมูล
     } catch (error) {
       console.error('Error fetching Pokemon names:', error)
       return ['bulbasaur', 'charmander', 'squirtle'].filter((name) => name !== correctName)
+      //ถ้าโหลด API ไม่ได้ จะ fallback ด้วยชื่อพื้นฐาน 3 ตัว (กันเกมพัง)
     }
   }
 }
 
-// สร้างตัวเลือกคำตอบ 4 ตัวเลือก
+// สร้างตัวเลือกคำตอบแบบ 4 ตัว นำโปเกม่อนตัวที่ถูก กับ ตัวที่ผิดมาสุ่มวาง ว่าจะวางไว้ตรงไหน
 const createOptions = async (correctName: string) => {
   //รับ String เป็น parameter
   const wrongOptions = await getRandomPokemonNames(correctName) /////////////////////////////////
 
-  const options = [...wrongOptions, correctName] //ทำการรวม 4 ตัวเลือกที่ผิดและถูกไว้ด้วยกัน (optioins)<-เป็นคนเก็บ
+  const options = [...wrongOptions, correctName] //ทำการรวม 4 ตัวเลือกที่ผิดและถูกไว้ด้วยกัน (optioins) <-เป็นคนเก็บ
   //...wrongOptions = เอาค่าสมาชิกในอาร์เรย์ออกมาทีละตัว สมมุติ wrongOptions = ['pikachu', 'bulbasaur', 'charmander']
   for (let i = options.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1)) // Fisher–Yates shuffle algorithm
@@ -293,53 +316,61 @@ const getNewPokemon = async () => {
 
 // ตรวจสอบคำตอบของผู้เล่น
 const checkAnswer = (selectedOption: string) => {
+  // รับสิ่งที่ผู้เล่นเลือกมา
   if (!currentPokemon.value || revealed.value || gameOver.value) return
+  // ถ้า currentPokemon ไม่มี หรือ เปิดเงาไปแล้ว หรือ gameOver ให้ return ไม่ต้องทำอะไร
 
-  const correctName = currentPokemon.value.name.toLowerCase()
-  const userAnswer = selectedOption.toLowerCase()
+  const correctName = currentPokemon.value.name.toLowerCase() //รับค่าตัวที่ถูกและเปลี่ยนเป็นตัวเล็ก
+  const userAnswer = selectedOption.toLowerCase() //สิ่งที่คนเล่นเลือกเปลี่ยนเป็นตัวเล็กและ ตั้งชื่อว่า userAnswer
 
   if (userAnswer === correctName) {
-    revealed.value = true
-    feedbackMessage.value = 'Correct! Well done!'
-    score.value += 10
-    streak.value++
+    // ถ้าถูก
+    revealed.value = true // เงา
+    feedbackMessage.value = 'Correct! Well done!' // ข้อความ feedback
+    score.value += 10 // เพิ่มคะแนน 10
+    streak.value++ // ชนะต่อเนื่อง +1
 
     if (streak.value > bestStreak.value) {
+      // ถ้าการชนะต่อเนื่อง > bestStreak ให้ เปลี่ยน HighScore
       bestStreak.value = streak.value
-      localStorage.setItem('pokemonGameBestStreak', bestStreak.value.toString())
+      localStorage.setItem('pokemonGameBestStreak', bestStreak.value.toString()) // บันทึก bestStreak ไว้ใน localStorage
     }
 
     if (score.value > highScore.value) {
+      // ถ้า score > highScore ให้เปลี่ยน HighScore
       highScore.value = score.value
-      localStorage.setItem('pokemonGameHighScore', highScore.value.toString())
+      localStorage.setItem('pokemonGameHighScore', highScore.value.toString()) // บันทึก highScore ไว้ใน localStorage
     }
 
     correctAnimation.value = true
     setTimeout(() => {
+      // บังคับปิด animation กันพลาด
       correctAnimation.value = false
     }, 1000)
   } else {
-    revealed.value = true
-    feedbackMessage.value = `Wrong! The correct answer is ${correctName}.`
-    lostLives.value++
-    lives.value--
-    streak.value = 0
+    //   ในกรณีถ้าตอบผิด
+    revealed.value = true // เปิดภาพ
+    feedbackMessage.value = `Wrong! The correct answer is ${correctName}.` //บอกว่าตอบผิด
+    lostLives.value++ // เพิ่มค่าชีวิตที่ต้องเสีย
+    lives.value-- // ลดชีวิต
+    streak.value = 0 // reset ชนะต่อเนื่อง
     if (lives.value <= 0 || lostLives.value >= 3) {
-      gameOver.value = true
+      gameOver.value = true // จบเกมตอนไหน
     }
   }
 }
 
 // รีเซ็ตเกมเมื่อ Game Over
 const resetGame = () => {
-  score.value = 0
-  streak.value = 0
-  lives.value = 3
-  lostLives.value = 0
-  gameOver.value = false
-  revealed.value = false
-  feedbackMessage.value = ''
-  getNewPokemon()
+  // เอาไว้ใช้ reset game
+  score.value = 0 // score เริ่มต้องไม่มี
+  streak.value = 0 // การชนะเกมต่อเนื่องต้องไม่มี
+  lives.value = 3 // ชีวิตเต็ม
+  lostLives.value = 0 // ยังไม่มีการสูญเสียชีวิต
+  gameOver.value = false // หยุดการจบเกม
+  revealed.value = false // ปิดการเฉลย
+  feedbackMessage.value = '' // ปิด feedbackMessage
+  getNewPokemon() // สุ่มตัวใหม่มาเล่น
 }
 
 // กำหนดสีของป้ายประเภทโปเกมอน
@@ -352,7 +383,7 @@ const getTypeClass = (type: string) => {
     grass: 'bg-green-400 text-white',
     ice: 'bg-blue-200 text-blue-800',
     fighting: 'bg-red-600 text-white',
-    poison: 'bg-purple-500 text-white',
+    poison: 'bg-purple-500 text-white', // กำหนดสีในป้ายธาตุต่างๆ
     ground: 'bg-yellow-600 text-white',
     flying: 'bg-indigo-300 text-indigo-800',
     psychic: 'bg-pink-400 text-white',
@@ -379,11 +410,11 @@ onMounted(async () => {
   if (savedBestStreak) {
     bestStreak.value = parseInt(savedBestStreak)
   }
-
+  // ดึงประวัติ ScoreBoard
   try {
     const response = await axios.get<PokemonListResponse>(
       'https://pokeapi.co/api/v2/pokemon?limit=151',
-    )
+    ) //ดึง pokemon 151 ตัว
     allPokemonNames.value = response.data.results.map((p) => p.name)
   } catch (error) {
     console.error('Error preloading Pokemon names:', error)
@@ -421,15 +452,15 @@ onMounted(async () => {
 @keyframes fadeIn {
   from {
     opacity: 0;
-    transform: translateY(-10px);
+    transform: translateX(-10px);
   }
   to {
     opacity: 1;
-    transform: translateY(0);
+    transform: translateX(0);
   }
 }
 .bg-green-100,
 .bg-red-100 {
-  animation: fadeIn 0.3s ease-out;
+  animation: fadeIn 0.5s ease-out;
 }
 </style>
