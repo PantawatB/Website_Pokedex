@@ -97,12 +97,13 @@
           <div
             v-for="item in filteredPokemonList"
             :key="item.id"
-            class="bg-white p-4 rounded-lg shadow-md flex flex-col items-center"
+            class="bg-white p-4 rounded-lg shadow-md flex flex-col items-center relative"
           >
             <img
-              :src="`https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${item.id}.png`"
-              alt="pokemon"
-              class=""
+              :src="getPokemonImageUrl(item)"
+              :alt="item.name"
+              class="w-24 h-24 object-contain"
+              @error="(e) => handleImageError(e, item.id)"
             />
             <div class="capitalize font-bold mb-2">{{ item.name }}</div>
             <div class="text-xs px-2 py-1 rounded-full bg-green-200 text-gray-900 font-normal">
@@ -218,8 +219,63 @@ const all1025Pokemon = async () => {
     base_experience: res.data.base_experience, //ข้อมูลที่ดึงมาจะอยู่ใน res.data
     height: res.data.height,
     weight: res.data.weight,
+    sprites: res.data.sprites, // เพิ่มข้อมูลรูปภาพ
   }))
 }
+// ฟังก์ชันจัดการเมื่อรูปภาพโหลดไม่สำเร็จ
+const handleImageError = (event: Event, pokemonId: number) => {
+  // ลองใช้รูปภาพสำรองจากแหล่งอื่น
+  const imgElement = event.target as HTMLImageElement
+
+  // ลองใช้รูปภาพสำรองตามลำดับ (ให้ความสำคัญกับรูปด้านหน้าก่อน)
+  const fallbackUrls = [
+    // ลองใช้รูปหน้าจาก GitHub PokeAPI repository
+    `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${pokemonId}.png`,
+    // ลองใช้รูป official artwork
+    `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/${pokemonId}.png`,
+    // ลองใช้รูปจาก Pokemon Home
+    `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/home/${pokemonId}.png`,
+    // ลองใช้รูปหลัง (ถ้าไม่มีรูปหน้า)
+    `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/back/${pokemonId}.png`,
+    // ลองใช้รูปจาก Dream World
+    `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/dream-world/${pokemonId}.svg`,
+  ]
+
+  // ใช้ URL สำรองแรกที่ไม่ใช่ URL ปัจจุบัน
+  for (const url of fallbackUrls) {
+    if (url && url !== imgElement.src) {
+      imgElement.src = url
+      return
+    }
+  }
+}
+
+// ฟังก์ชันสำหรับเลือก URL รูปภาพที่เหมาะสม
+const getPokemonImageUrl = (pokemon: PokemonDetail) => {
+  // ถ้ามีข้อมูล sprites ให้ใช้ตามลำดับความสำคัญ (ให้ความสำคัญกับรูปด้านหน้าก่อน)
+  if (pokemon.sprites) {
+    return (
+      // 1. ใช้รูปหน้าจาก API ถ้ามี
+      pokemon.sprites.front_default ||
+      // 2. ใช้รูปหน้าจาก GitHub PokeAPI repository
+      `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${pokemon.id}.png` ||
+      // 3. ใช้รูป official artwork
+      pokemon.sprites.other?.['official-artwork']?.front_default ||
+      // 4. ใช้รูปจาก Pokemon Home
+      pokemon.sprites.other?.home?.front_default ||
+      // 5. ใช้รูปหลังจาก API (ถ้าไม่มีรูปหน้า)
+      pokemon.sprites.back_default ||
+      // 6. ใช้รูปหลังจาก GitHub PokeAPI repository
+      `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/back/${pokemon.id}.png` ||
+      // 7. ใช้รูปจาก Dream World
+      pokemon.sprites.other?.['dream-world']?.front_default
+    )
+  }
+
+  // ถ้าไม่มีข้อมูล sprites ให้ใช้ URL เริ่มต้น
+  return `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${pokemon.id}.png`
+}
+
 onMounted(async () => {
   await all1025Pokemon() // ค้นหาโปเกมอน ID 1-150
   console.log('mounted')

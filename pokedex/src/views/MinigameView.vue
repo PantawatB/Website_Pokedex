@@ -29,6 +29,16 @@
             </span>
           </div>
         </div>
+        <!-- Tester Only Deverloper
+        <div class="flex justify-center mb-4">
+          <button
+            v-if="!revealed && !gameOver"
+            @click="getNewPokemon"
+            class="bg-slate-800 text-white px-6 py-2 rounded-lg hover:bg-slate-700 transition-colors"
+          >
+            Next Pokémon
+          </button>
+        </div> -->
 
         <!-- Soreboard -->
         <div class="bg-gray-100 rounded-lg p-3 mb-4 border border-gray-200">
@@ -50,13 +60,15 @@
             v-if="currentPokemon"
             :src="pokemonImageUrl"
             alt="Pokemon"
-            class="w-48 h-48 object-contain transition-all duration-300"
+            class="w-48 h-48 object-contain transition-all duration-300 pokemon-image"
             :class="{
               'pokemon-silhouette': !revealed,
               'pokemon-revealed': revealed,
               'correct-animation': correctAnimation,
             }"
+            @error="handleImageError"
           />
+          <!-- มีการเพิ่มการ handleImageError เพื่อป้องกันภาพไม่โหลด -->
           <!-- ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ -->
           <!-- ดึงข้อมูลโปเกมอน และ รูปภาพ หน้าหลัง "ถ้ามีโปเกมอนให้แสดงรูปภาพ" -->
           <!--  -->
@@ -119,16 +131,16 @@
             Next Pokémon
           </button>
         </div>
-        <!--
+
         <div class="flex justify-center mb-4">
           <button
             v-if="!revealed && !gameOver"
-            @click="getNewPokemon"
+            @click="reloadPokemonImage"
             class="bg-slate-800 text-white px-6 py-2 rounded-lg hover:bg-slate-700 transition-colors"
           >
-            Helper if image not show (Dev mode)
+            Change image if image doesn't load!
           </button>
-        </div> -->
+        </div>
 
         <!-- หน้าจอ Game Over -->
         <!-- แสดง <div> นี้ตอน จบเกม -->
@@ -176,6 +188,18 @@ interface PokemonApiResponse {
   sprites: {
     front_default: string
     back_default: string
+    other?: {
+      'official-artwork'?: {
+        front_default?: string
+      }
+      home?: {
+        front_default?: string
+      }
+      'dream-world'?: {
+        front_default?: string
+        front_female?: string
+      }
+    }
   }
   types: Array<{
     type: {
@@ -198,26 +222,44 @@ const feedbackMessage = ref('') // ข้อความตอบรับ
 const correctAnimation = ref(false) // แอนิเมชันเมื่อคำตอบถูก
 const pokemonOptions = ref<string[]>([]) // ตัวเลือกคำตอบ Array
 const allPokemonNames = ref<string[]>([]) // รายชื่อโปเกมอนทั้งหมดที่โหลดมา
+const currentImageSourceIndex = ref(0) // ดัชนีของแหล่งรูปภาพปัจจุบัน (ใช้สำหรับการเปลี่ยนรูปภาพ)
 
 // สร้างลิงก์รูปภาพโปเกมอน
-// ดึงรูปภาพของตัวปัจจุบันมาเก็บ
+// ดึงรูปภาพของตัวปัจจุบันมาเก็บ ไว้ใน pokemonImageUrl
 const pokemonImageUrl = computed(() => {
   if (!currentPokemon.value) return ''
+
+  // ลำดับการเลือกรูปภาพ (เรียงตามลำดับความสำคัญ ให้ความสำคัญกับรูปด้านหน้าก่อน และรวม API, GitHub และ Dream World)
   return (
+    // 1. ใช้รูปหน้าจาก API, GitHub หรือ Dream World
     currentPokemon.value.sprites.front_default ||
+    `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${currentPokemon.value.id}.png` ||
+    currentPokemon.value.sprites.other?.['dream-world']?.front_default ||
+    // 2. ใช้รูป official artwork ถ้ามี
+    currentPokemon.value.sprites.other?.['official-artwork']?.front_default ||
+    // 3. ใช้รูปจาก Pokemon Home ถ้ามี
+    currentPokemon.value.sprites.other?.home?.front_default ||
+    // 4. ใช้รูปหลังจาก API หรือ GitHub (ถ้าไม่มีรูปหน้า)
     currentPokemon.value.sprites.back_default ||
-    `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${currentPokemon.value.id}.png`
+    `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/back/${currentPokemon.value.id}.png`
   )
 })
 
 // การแสดงสีของข้อความตอบกลับ
 const feedbackClass = computed(() => {
-  if (feedbackMessage.value.includes('Correct')) {
+  if (
+    feedbackMessage.value.includes('Correct') ||
+    feedbackMessage.value.includes('reloaded successfully')
+  ) {
     return 'bg-green-100 text-green-800'
-    //มี Correct ก็พื้นหลังสีเขียว
-  } else if (feedbackMessage.value.includes('Wrong')) {
+    //มี Correct หรือ reloaded successfully ก็พื้นหลังสีเขียว
+  } else if (
+    feedbackMessage.value.includes('Wrong') ||
+    feedbackMessage.value.includes('Error') ||
+    feedbackMessage.value.includes('Loading issues')
+  ) {
     return 'bg-red-100 text-red-800'
-    //มี Wrong ก็พื้นหลังสีแดง
+    //มี Wrong,Loading issues หรือ Error ก็พื้นหลังสีแดง
   }
   return ''
   //กรณีผู้เล่นยังไม่ตอบคำถาม
@@ -292,6 +334,7 @@ const getNewPokemon = async () => {
     feedbackMessage.value = '' // ซ่อน feedbackMessage
     correctAnimation.value = false //พยายามปิด Animation เพื่อป้องกันการบัค
     currentPokemon.value = null // ล้างข้อมูล โปเกม่อน ที่นำมาเล่น
+    currentImageSourceIndex.value = 0 // รีเซ็ต index แหล่งรูปภาพกลับเป็น 0
 
     if (lives.value <= 0) {
       //เหลือชีวิต 0 บังคับจบเกม
@@ -311,6 +354,109 @@ const getNewPokemon = async () => {
     //โยน error ออก กรณี ทำอะไรพลาด
     console.error('Error fetching Pokémon:', error)
     feedbackMessage.value = 'Error loading Pokémon. Please try again.'
+  }
+}
+
+// ฟังก์ชันจัดการเมื่อรูปภาพโหลดไม่สำเร็จ
+const handleImageError = (event: Event) => {
+  if (!currentPokemon.value) return
+
+  // // แสดงข้อความแจ้งเตือน
+  // feedbackMessage.value = 'Image failed to load. Try using the reload button.'
+
+  // ลองใช้รูปภาพสำรองจากแหล่งอื่น
+  const imgElement = event.target as HTMLImageElement //แปลงเเป็น Element รูปภาพ
+  const pokemonId = currentPokemon.value.id // เก็บไอดีไว้ใช้หารูปภาพอื่น
+
+  // ลองใช้รูปภาพสำรองตามลำดับ (ให้ความสำคัญกับรูปด้านหน้าก่อน และรวม API, GitHub และ Dream World)
+  const fallbackUrls = [
+    // 1. ใช้รูปหน้าจาก GitHub PokeAPI repository หรือ Dream World
+    `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${pokemonId}.png` ||
+      `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/dream-world/${pokemonId}.svg`,
+    // 2. ใช้รูป official artwork
+    `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/${pokemonId}.png`,
+    // 3. ใช้รูปจาก Pokemon Home
+    `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/home/${pokemonId}.png`,
+    // 4. ใช้รูปหลังจาก API หรือ GitHub
+    currentPokemon.value.sprites.back_default ||
+      `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/back/${pokemonId}.png`,
+  ]
+
+  // ใช้ URL สำรองแรกที่ไม่ใช่ URL ปัจจุบัน
+  for (const url of fallbackUrls) {
+    if (url && url !== imgElement.src) {
+      imgElement.src = url
+      return
+    }
+  }
+}
+
+// ฟังก์ชันสำหรับดึง URL รูปภาพตามดัชนีที่กำหนด
+const getImageUrlByIndex = (pokemon: PokemonApiResponse, index: number): string => {
+  // เก็บไอดีของ pokemon
+  const id = pokemon.id
+
+  // รายการแหล่งรูปภาพตามลำดับความสำคัญ (รวม API, GitHub และ Dream World เข้าด้วยกัน)
+  const imageSources = [
+    // 0. ใช้รูปหน้า (API, GitHub หรือ Dream World)
+    pokemon.sprites.front_default ||
+      `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${id}.png` ||
+      pokemon.sprites.other?.['dream-world']?.front_default,
+    // 1. ใช้รูป official artwork
+    pokemon.sprites.other?.['official-artwork']?.front_default,
+    // 2. ใช้รูปจาก Pokemon Home
+    pokemon.sprites.other?.home?.front_default,
+    // 3. ใช้รูปหลัง (API หรือ GitHub)
+    pokemon.sprites.back_default ||
+      `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/back/${id}.png`,
+  ]
+
+  // ใช้ modulo เพื่อให้ดัชนีวนกลับมาเริ่มต้นใหม่เมื่อเกินขนาดของ array
+  const normalizedIndex = index % imageSources.length
+
+  // ถ้า URL ที่ได้เป็น undefined หรือ null ให้ลองใช้ URL ถัดไป
+  for (let i = 0; i < imageSources.length; i++) {
+    const sourceIndex = (normalizedIndex + i) % imageSources.length
+    if (imageSources[sourceIndex]) {
+      return imageSources[sourceIndex] as string
+    }
+  }
+
+  // ถ้าไม่มี URL ที่ใช้ได้เลย ให้ใช้ URL เริ่มต้น
+  return `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${id}.png`
+}
+
+// ฟังก์ชันสำหรับบังคับเปลี่ยนรูปภาพโปเกมอนตามลำดับความสำคัญ
+const reloadPokemonImage = () => {
+  try {
+    if (!currentPokemon.value) return
+
+    // เพิ่มดัชนีเพื่อเปลี่ยนไปใช้แหล่งรูปภาพถัดไป
+    currentImageSourceIndex.value = (currentImageSourceIndex.value + 1) % 4 //4 แหล่งภาพ
+
+    // ดึง URL รูปภาพตามดัชนีปัจจุบัน
+    const newImageUrl = getImageUrlByIndex(currentPokemon.value, currentImageSourceIndex.value)
+
+    // อัปเดตรูปภาพโดยตรงที่ DOM element
+    const imgElement = document.querySelector('.pokemon-image') as HTMLImageElement
+    if (imgElement) {
+      imgElement.src = newImageUrl //แทนที่รูปภาพอันใหม่ทันที
+
+      // แสดงชื่อแหล่งรูปภาพปัจจุบัน
+      const sourceNames = ['Front view', 'Official Artwork', 'Pokemon Home', 'Back view']
+
+      // แสดงข้อความว่าเปลี่ยนรูปภาพสำเร็จ
+      feedbackMessage.value = `ⓘ Loading issues, Changed img to ${sourceNames[currentImageSourceIndex.value]}`
+      setTimeout(() => {
+        feedbackMessage.value = ''
+      }, 2000)
+    }
+  } catch (error) {
+    console.error('Error changing Pokémon image:', error)
+    feedbackMessage.value = 'ⓘ Error changing image. Please try again.'
+    setTimeout(() => {
+      feedbackMessage.value = ''
+    }, 2000)
   }
 }
 
