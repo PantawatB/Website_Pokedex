@@ -222,54 +222,102 @@ const all1025Pokemon = async () => {
     sprites: res.data.sprites, // เพิ่มข้อมูลรูปภาพ
   }))
 }
+// ตัวแปรเก็บข้อมูลว่าได้ลองใช้รูปภาพใดแล้วบ้างสำหรับแต่ละ Pokemon
+const imageAttempts = ref<Record<number, string[]>>({})
+
 // ฟังก์ชันจัดการเมื่อรูปภาพโหลดไม่สำเร็จ
 const handleImageError = (event: Event, pokemonId: number) => {
   // ลองใช้รูปภาพสำรองจากแหล่งอื่น
   const imgElement = event.target as HTMLImageElement
+  const currentSrc = imgElement.src
 
-  // ลองใช้รูปภาพสำรองตามลำดับ (ให้ความสำคัญกับรูปด้านหน้าก่อน)
+  // ตรวจสอบว่าเป็นรูป no-image.png หรือไม่ ถ้าใช่ให้หยุดการทำงาน
+  if (currentSrc.includes('/no-image.png')) {
+    console.log(`Stopped trying to load image for Pokemon #${pokemonId} to prevent infinite loop`)
+    return
+  }
+
+  // สร้าง array เก็บประวัติการลองใช้รูปภาพสำหรับ Pokemon นี้ ถ้ายังไม่มี
+  if (!imageAttempts.value[pokemonId]) {
+    imageAttempts.value[pokemonId] = []
+  }
+
+  // เพิ่ม URL ปัจจุบันเข้าไปในประวัติ
+  imageAttempts.value[pokemonId].push(currentSrc)
+
+  // ลองใช้รูปภาพสำรองตามลำดับความสำคัญ
   const fallbackUrls = [
-    // ลองใช้รูปหน้าจาก GitHub PokeAPI repository
+    // 0. ใช้รูปหน้า (GitHub หรือ Dream World)
     `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${pokemonId}.png`,
-    // ลองใช้รูป official artwork
-    `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/${pokemonId}.png`,
-    // ลองใช้รูปจาก Pokemon Home
-    `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/home/${pokemonId}.png`,
-    // ลองใช้รูปหลัง (ถ้าไม่มีรูปหน้า)
-    `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/back/${pokemonId}.png`,
-    // ลองใช้รูปจาก Dream World
     `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/dream-world/${pokemonId}.svg`,
+
+    // 1. ใช้รูป official artwork
+    `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/${pokemonId}.png`,
+
+    // 2. ใช้รูปจาก Pokemon Home
+    `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/home/${pokemonId}.png`,
+
+    // 3. ใช้รูปหลัง (GitHub)
+    `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/back/${pokemonId}.png`,
+
+    // ถ้าไม่มีรูปไหนเลย ให้ใช้รูปว่าง (เพื่อป้องกัน loop)
+    '/no-image.png',
   ]
 
-  // ใช้ URL สำรองแรกที่ไม่ใช่ URL ปัจจุบัน
+  // หา URL ถัดไปที่ยังไม่เคยลองใช้
   for (const url of fallbackUrls) {
-    if (url && url !== imgElement.src) {
-      imgElement.src = url
-      return
+    // ข้ามถ้า URL เป็น undefined หรือเป็น URL เดิม
+    if (!url || url === currentSrc) {
+      continue
     }
+
+    // ข้ามถ้าเคยลองใช้ URL นี้แล้ว
+    if (imageAttempts.value[pokemonId].includes(url)) {
+      continue
+    }
+
+    // ใช้ URL นี้
+    console.log(`Trying next image source for Pokemon #${pokemonId}: ${url}`)
+    imgElement.src = url
+    return
   }
+
+  // ถ้าลองทุก URL แล้วยังไม่สำเร็จ ให้ใช้รูป no-image.png
+  console.log(`All image sources failed for Pokemon #${pokemonId}, using no-image placeholder`)
+  imgElement.src = '/no-image.png'
 }
 
 // ฟังก์ชันสำหรับเลือก URL รูปภาพที่เหมาะสม
 const getPokemonImageUrl = (pokemon: PokemonDetail) => {
-  // ถ้ามีข้อมูล sprites ให้ใช้ตามลำดับความสำคัญ (ให้ความสำคัญกับรูปด้านหน้าก่อน)
+  // ถ้ามีข้อมูล sprites ให้ใช้ตามลำดับความสำคัญ
   if (pokemon.sprites) {
-    return (
-      // 1. ใช้รูปหน้าจาก API ถ้ามี
-      pokemon.sprites.front_default ||
-      // 2. ใช้รูปหน้าจาก GitHub PokeAPI repository
-      `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${pokemon.id}.png` ||
-      // 3. ใช้รูป official artwork
-      pokemon.sprites.other?.['official-artwork']?.front_default ||
-      // 4. ใช้รูปจาก Pokemon Home
-      pokemon.sprites.other?.home?.front_default ||
-      // 5. ใช้รูปหลังจาก API (ถ้าไม่มีรูปหน้า)
-      pokemon.sprites.back_default ||
-      // 6. ใช้รูปหลังจาก GitHub PokeAPI repository
-      `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/back/${pokemon.id}.png` ||
-      // 7. ใช้รูปจาก Dream World
-      pokemon.sprites.other?.['dream-world']?.front_default
-    )
+    // สร้าง array ของ URL ที่เป็นไปได้ตามลำดับความสำคัญ
+    const possibleUrls = [
+      // 0. ใช้รูปหน้า (API, GitHub หรือ Dream World)
+      pokemon.sprites.front_default,
+      `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${pokemon.id}.png`,
+      pokemon.sprites.other?.['dream-world']?.front_default,
+
+      // 1. ใช้รูป official artwork
+      pokemon.sprites.other?.['official-artwork']?.front_default,
+
+      // 2. ใช้รูปจาก Pokemon Home
+      pokemon.sprites.other?.home?.front_default,
+
+      // 3. ใช้รูปหลัง (API หรือ GitHub)
+      pokemon.sprites.back_default,
+      `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/back/${pokemon.id}.png`,
+    ]
+
+    // ใช้ URL แรกที่ไม่เป็น undefined หรือ null
+    for (const url of possibleUrls) {
+      if (url) {
+        return url
+      }
+    }
+
+    // ถ้าไม่มี URL ไหนใช้ได้เลย ให้ใช้รูปว่าง
+    return '/no-image.png'
   }
 
   // ถ้าไม่มีข้อมูล sprites ให้ใช้ URL เริ่มต้น
