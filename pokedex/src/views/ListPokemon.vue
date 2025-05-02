@@ -97,7 +97,8 @@
           <div
             v-for="item in filteredPokemonList"
             :key="item.id"
-            class="bg-white p-4 rounded-lg shadow-md flex flex-col items-center relative"
+            class="bg-white p-4 rounded-lg shadow-md flex flex-col items-center relative cursor-pointer transform transition-transform duration-300 hover:scale-105"
+            @click="selectPokemon(item)"
           >
             <img
               :src="getPokemonImageUrl(item)"
@@ -121,144 +122,258 @@
 
         <!-- Right Sidebar -->
         <div class="w-[320px] bg-white p-6 rounded-lg shadow-md">
-          <div class="flex flex-col items-center">
+          <div class="relative mb-4">
+            <button
+              v-if="selectedPokemon"
+              @click="toggleShiny"
+              class="absolute top-0 right-0 bg-slate-800 text-xs px-2 py-1 rounded text-white"
+            >
+              {{ isShiny ? 'Toggle to Normal' : 'Toggle to Shiny' }}
+            </button>
+          </div>
+          <div v-if="!selectedPokemon" class="flex flex-col items-center">
             <div class="h-20 w-20 bg-gray-200 rounded-full mb-4"></div>
-            <!-- Placeholder for big Pokémon image -->
             <div class="text-2xl text-center font-bold mb-2">Please select any Pokémon</div>
-            <div class="text-gray-500 text-sm mb-4">This is pokemon detail</div>
-
-            <!-- Placeholder for types -->
+            <div class="text-gray-500 text-sm mb-4">Click on a Pokémon card to view details</div>
             <div class="flex gap-2 mb-4 justify-center">
               <span class="px-3 py-1 bg-gray-300 text-gray-700 rounded-full text-xs"
                 >Select a Pokémon</span
               >
             </div>
-            <!-- Preview สีของแต่ละ Type For Testing -->
-            <!-- <div class="flex flex-wrap gap-2 justify-center">
-              <span
-                class="px-3 py-1 rounded-full text-xs font-semibold capitalize bg-gray-500 text-white"
-                >normal</span
-              >
-              <span
-                class="px-3 py-1 rounded-full text-xs font-semibold capitalize bg-red-400 text-white"
-                >fire</span
-              >
-              <span
-                class="px-3 py-1 rounded-full text-xs font-semibold capitalize bg-blue-500 text-white"
-                >water</span
-              >
-              <span
-                class="px-3 py-1 rounded-full text-xs font-semibold capitalize bg-yellow-400 text-white"
-                >electric</span
-              >
-              <span
-                class="px-3 py-1 rounded-full text-xs font-semibold capitalize bg-green-500 text-white"
-                >grass</span
-              >
-              <span
-                class="px-3 py-1 rounded-full text-xs font-semibold capitalize bg-cyan-400 text-white"
-                >ice</span
-              >
-              <span
-                class="px-3 py-1 rounded-full text-xs font-semibold capitalize bg-orange-400 text-white"
-                >fighting</span
-              >
-              <span
-                class="px-3 py-1 rounded-full text-xs font-semibold capitalize bg-purple-400 text-white"
-                >poison</span
-              >
-              <span
-                class="px-3 py-1 rounded-full text-xs font-semibold capitalize bg-amber-700 text-white"
-                >ground</span
-              >
-              <span
-                class="px-3 py-1 rounded-full text-xs font-semibold capitalize bg-indigo-600 text-white"
-                >flying</span
-              >
-              <span
-                class="px-3 py-1 rounded-full text-xs font-semibold capitalize bg-pink-400 text-white"
-                >psychic</span
-              >
-              <span
-                class="px-3 py-1 rounded-full text-xs font-semibold capitalize bg-lime-500 text-white"
-                >bug</span
-              >
-              <span
-                class="px-3 py-1 rounded-full text-xs font-semibold capitalize bg-yellow-600 text-white"
-                >rock</span
-              >
-              <span
-                class="px-3 py-1 rounded-full text-xs font-semibold capitalize bg-violet-500 text-white"
-                >ghost</span
-              >
-              <span
-                class="px-3 py-1 rounded-full text-xs font-semibold capitalize bg-indigo-400 text-white"
-                >dragon</span
-              >
-              <span
-                class="px-3 py-1 rounded-full text-xs font-semibold capitalize bg-gray-800 text-white"
-                >dark</span
-              >
-              <span
-                class="px-3 py-1 rounded-full text-xs font-semibold capitalize bg-slate-400 text-white"
-                >steel</span
-              >
-              <span
-                class="px-3 py-1 rounded-full text-xs font-semibold capitalize bg-rose-400 text-white"
-                >fairy</span
-              >
-            </div> -->
-            <!-- /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////// -->
-            <!-- <p class="text-gray-600 text-center text-sm mb-6">
-              It swims as fast as a jet boat. The edges of its wings are sharp and can slice apart
-              drifting ice.
-            </p> -->
+          </div>
 
-            <!-- <div class="w-full text-sm mb-2 font-semibold">Abilities</div>
-            <div class="flex gap-2 mb-6">
-              <span class="px-2 py-1 bg-gray-100 rounded">Torrent</span>
-              <span class="px-2 py-1 bg-gray-100 rounded">Defiant</span>
-            </div> -->
+          <div v-else class="flex flex-col items-center">
+            <!-- Pokemon Image with Shiny Toggle -->
+            <div class="relative mb-4">
+              <img
+                :src="getSelectedPokemonImageUrl()"
+                :alt="selectedPokemon.name"
+                class="w-40 h-40 object-contain"
+                @error="(e) => selectedPokemon && handleImageError(e, selectedPokemon.id)"
+              />
+            </div>
 
-            <!-- <div class="flex justify-between w-full text-xs text-gray-500 mb-4">
+            <!-- Pokemon ID and Name -->
+            <div class="text-gray-500 text-sm mb-1">#{{ selectedPokemon.id }}</div>
+            <div class="text-2xl text-center font-bold mb-2 capitalize">
+              {{ selectedPokemon.name }}
+            </div>
+
+            <!-- Pokemon Types -->
+            <div class="flex gap-2 mb-4 justify-center">
+              <span
+                v-for="(typeObj, index) in selectedPokemon.types"
+                :key="index"
+                class="px-3 py-1 rounded-full text-xs font-semibold capitalize"
+                :class="getTypeClass(typeObj.type.name)"
+              >
+                {{ typeObj.type.name }}
+              </span>
+            </div>
+
+            <!-- Pokemon Description -->
+            <p v-if="pokemonSpecies" class="text-gray-600 text-center text-sm mb-6">
+              {{ getPokemonDescription() }}
+            </p>
+
+            <!-- Pokemon Abilities -->
+            <div
+              v-if="selectedPokemon.abilities && selectedPokemon.abilities.length > 0"
+              class="w-full mb-6"
+            >
+              <div class="text-sm mb-2 font-semibold">Abilities</div>
+              <div class="flex flex-wrap gap-2">
+                <span
+                  v-for="(abilityObj, index) in selectedPokemon.abilities"
+                  :key="index"
+                  class="px-2 py-1 bg-gray-300 rounded capitalize"
+                  :class="{
+                    ' bg-slate-800 text-white  border-red-600 border-[px]': abilityObj.is_hidden,
+                  }"
+                >
+                  {{ abilityObj.ability.name }}
+                  <span v-if="abilityObj.is_hidden" class="text-xs text-purple-300 ml-1"
+                    >(hidden)</span
+                  >
+                </span>
+              </div>
+            </div>
+
+            <!-- Height and Weight -->
+            <div class="flex justify-between w-full text-xs text-gray-500 mb-4">
               <div>
                 <div class="font-bold text-gray-800">Height</div>
-                <div>1.7m</div>
+                <div>{{ (selectedPokemon.height / 10).toFixed(1) }}m</div>
               </div>
               <div>
                 <div class="font-bold text-gray-800">Weight</div>
-                <div>84.5kg</div>
+                <div>{{ (selectedPokemon.weight / 10).toFixed(1) }}kg</div>
               </div>
-            </div> -->
+              <div v-if="pokemonSpecies">
+                <div class="font-bold text-gray-800">Gender</div>
+                <div>{{ getGenderRatio() }}</div>
+              </div>
+            </div>
 
-            <!-- <div class="text-sm font-semibold mb-2">Weaknesses</div>
-            <div class="flex gap-2 mb-6">
-              <div class="w-6 h-6 bg-red-200 rounded-full"></div>
-              <div class="w-6 h-6 bg-yellow-200 rounded-full"></div>
-              <div class="w-6 h-6 bg-green-200 rounded-full"></div>
-            </div> -->
+            <!-- Type Relationships -->
+            <div class="w-full mb-6">
+              <!-- Weaknesses -->
+              <div v-if="typeWeaknesses.length > 0" class="mb-4">
+                <div class="text-sm font-semibold mb-2">Weaknesses</div>
 
-            <!-- <div class="text-sm font-semibold mb-2">Base EXP</div>
-            <div class="mb-6">239</div> -->
+                <!-- 4x Weaknesses -->
+                <div v-if="typeWeaknesses.some((item) => item.effectiveness === 4)" class="mb-2">
+                  <div class="text-xs font-medium mb-1 text-black">Takes 4× more damage with:</div>
+                  <div class="flex flex-wrap gap-2">
+                    <span
+                      v-for="(item, index) in typeWeaknesses.filter(
+                        (item) => item.effectiveness === 4,
+                      )"
+                      :key="index"
+                      class="px-2 py-1 rounded-full text-xs font-semibold capitalize"
+                      :class="getTypeClass(item.type)"
+                    >
+                      {{ item.type }}
+                    </span>
+                  </div>
+                </div>
 
-            <!-- <div class="text-sm font-semibold mb-2">Stats</div>
-            <div class="grid grid-cols-2 gap-2 text-xs">
-              <div class="flex justify-between"><span>HP</span><span>84</span></div>
-              <div class="flex justify-between"><span>ATK</span><span>86</span></div>
-              <div class="flex justify-between"><span>DEF</span><span>88</span></div>
-              <div class="flex justify-between"><span>SpA</span><span>111</span></div>
-              <div class="flex justify-between"><span>SpD</span><span>101</span></div>
-              <div class="flex justify-between"><span>SPD</span><span>60</span></div>
-            </div> -->
+                <!-- 2x Weaknesses -->
+                <div v-if="typeWeaknesses.some((item) => item.effectiveness === 2)">
+                  <div class="text-xs font-medium mb-1 text-black">Takes 2× more damage with:</div>
+                  <div class="flex flex-wrap gap-2">
+                    <span
+                      v-for="(item, index) in typeWeaknesses.filter(
+                        (item) => item.effectiveness === 2,
+                      )"
+                      :key="index"
+                      class="px-2 py-1 rounded-full text-xs font-semibold capitalize"
+                      :class="getTypeClass(item.type)"
+                    >
+                      {{ item.type }}
+                    </span>
+                  </div>
+                </div>
+              </div>
 
-            <!-- <div class="font-bold mt-4">530</div>
+              <!-- Resistances -->
+              <div v-if="typeResistances.length > 0">
+                <div class="text-sm font-semibold mb-2">Resistances</div>
 
-            <div class="text-sm font-semibold mt-6 mb-2">Evolution</div>
-            <div class="flex gap-2 items-center">
-              <div class="h-10 w-10 bg-gray-200 rounded-full"></div>
-              <div class="h-10 w-10 bg-gray-200 rounded-full"></div>
-              <div class="h-10 w-10 bg-gray-200 rounded-full"></div>
-            </div> -->
+                <!-- Immune -->
+                <div v-if="typeResistances.some((item) => item.effectiveness === 0)" class="mb-2">
+                  <div class="text-xs font-medium mb-1 text-black">Immune to:</div>
+                  <div class="flex flex-wrap gap-2">
+                    <span
+                      v-for="(item, index) in typeResistances.filter(
+                        (item) => item.effectiveness === 0,
+                      )"
+                      :key="index"
+                      class="px-2 py-1 rounded-full text-xs font-semibold capitalize"
+                      :class="getTypeClass(item.type)"
+                    >
+                      {{ item.type }}
+                    </span>
+                  </div>
+                </div>
+
+                <!-- 1/4x Resistance -->
+                <div
+                  v-if="typeResistances.some((item) => item.effectiveness === 0.25)"
+                  class="mb-2"
+                >
+                  <div class="text-xs font-medium mb-1 text-black">Takes ¼× less damage with:</div>
+                  <div class="flex flex-wrap gap-2">
+                    <span
+                      v-for="(item, index) in typeResistances.filter(
+                        (item) => item.effectiveness === 0.25,
+                      )"
+                      :key="index"
+                      class="px-2 py-1 rounded-full text-xs font-semibold capitalize"
+                      :class="getTypeClass(item.type)"
+                    >
+                      {{ item.type }}
+                    </span>
+                  </div>
+                </div>
+
+                <!-- 1/2x Resistance -->
+                <div v-if="typeResistances.some((item) => item.effectiveness === 0.5)">
+                  <div class="text-xs font-medium mb-1 text-black">Takes ½× less damage with:</div>
+                  <div class="flex flex-wrap gap-2">
+                    <span
+                      v-for="(item, index) in typeResistances.filter(
+                        (item) => item.effectiveness === 0.5,
+                      )"
+                      :key="index"
+                      class="px-2 py-1 rounded-full text-xs font-semibold capitalize"
+                      :class="getTypeClass(item.type)"
+                    >
+                      {{ item.type }}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Evolution Chain -->
+            <div v-if="evolutionChain" class="w-full mb-6">
+              <div class="text-sm font-semibold mb-2">Evolution Chain</div>
+              <div class="flex items-center justify-center gap-2">
+                <div
+                  v-for="(evo, index) in getEvolutionChainData()"
+                  :key="evo.id"
+                  class="flex items-center"
+                >
+                  <!-- Pokemon in evolution chain -->
+                  <div class="flex flex-col items-center">
+                    <img
+                      :src="`https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${evo.id}.png`"
+                      :alt="evo.name"
+                      class="w-16 h-16 object-contain"
+                    />
+                    <div class="text-xs capitalize">{{ evo.name }}</div>
+                    <div v-if="evo.minLevel" class="text-xs text-gray-500">
+                      Lv.{{ evo.minLevel }}
+                    </div>
+                  </div>
+
+                  <!-- Arrow between evolutions -->
+                  <div v-if="index < getEvolutionChainData().length - 1" class="mx-2">
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      class="h-5 w-5 text-gray-400"
+                      viewBox="0 0 20 20"
+                      fill="currentColor"
+                    >
+                      <path
+                        fill-rule="evenodd"
+                        d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z"
+                        clip-rule="evenodd"
+                      />
+                    </svg>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Navigation Buttons -->
+            <div class="flex justify-between w-full mt-4">
+              <button
+                @click="goToPreviousPokemon"
+                class="px-4 py-2 bg-slate-800 text-white rounded-md disabled:opacity-50"
+                :disabled="!selectedPokemon || selectedPokemon.id <= 1"
+              >
+                Previous
+              </button>
+              <button
+                @click="goToNextPokemon"
+                class="px-4 py-2 bg-slate-800 text-white rounded-md disabled:opacity-50"
+                :disabled="!selectedPokemon || selectedPokemon.id >= fullPokemonList.length"
+              >
+                Next
+              </button>
+            </div>
           </div>
         </div>
       </div>
@@ -270,9 +385,28 @@
 import MainWeb from '@/components/MainWeb.vue'
 import axios from 'axios'
 import { ref, onMounted, computed } from 'vue'
-import type { PokemonDetail } from '@/models/pokemon.model'
+import type {
+  PokemonDetail,
+  PokemonSpecies,
+  EvolutionChain,
+  DamageRelations,
+} from '@/models/pokemon.model'
 const fullPokemonList = ref<PokemonDetail[]>([]) //fullPokemonList เป็น PokemonDetail ที่เป็น array
 const searchkey = ref('')
+
+// ตัวแปรสำหรับเก็บข้อมูล Pokemon ที่เลือก
+const selectedPokemon = ref<PokemonDetail | null>(null)
+const isShiny = ref(false) // สถานะการแสดงรูป Shiny
+const pokemonSpecies = ref<PokemonSpecies | null>(null) // ข้อมูลเพิ่มเติมของ Pokemon (คำอธิบาย, เพศ, ฯลฯ)
+const evolutionChain = ref<EvolutionChain | null>(null) // ข้อมูล evolution chain
+// ข้อมูลความสัมพันธ์ของธาตุ
+interface TypeEffectiveness {
+  type: string
+  effectiveness: number // 0 = immune, 0.25 = very resistant, 0.5 = resistant, 1 = normal, 2 = weak, 4 = very weak
+}
+
+const typeWeaknesses = ref<TypeEffectiveness[]>([]) // ประเภทที่ Pokemon นี้แพ้ (effectiveness > 1)
+const typeResistances = ref<TypeEffectiveness[]>([]) // ประเภทที่ Pokemon ต้านทาน (effectiveness < 1)
 
 // Computed
 const filteredPokemonList = computed(() => {
@@ -305,6 +439,7 @@ const all1025Pokemon = async () => {
     weight: res.data.weight,
     sprites: res.data.sprites, // เพิ่มข้อมูลรูปภาพ
     types: res.data.types, // เพิ่มข้อมูลประเภทของโปเกมอน
+    abilities: res.data.abilities, // เพิ่มข้อมูลความสามารถของโปเกมอน
   }))
 }
 // ตัวแปรเก็บข้อมูลว่าได้ลองใช้รูปภาพใดแล้วบ้างสำหรับแต่ละ Pokemon
@@ -330,26 +465,50 @@ const handleImageError = (event: Event, pokemonId: number) => {
   // เพิ่ม URL ปัจจุบันเข้าไปในประวัติ
   imageAttempts.value[pokemonId].push(currentSrc)
 
+  // ตรวจสอบว่าเป็นรูป Shiny หรือไม่
+  const isShinyImage = currentSrc.includes('/shiny/') || currentSrc.includes('shiny')
+
   // ลองใช้รูปภาพสำรองตามลำดับความสำคัญ
-  const fallbackUrls = [
-    // 0. ใช้รูปหน้า (GitHub)
-    `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${pokemonId}.png`,
+  const fallbackUrls = isShinyImage
+    ? [
+        // 0. ใช้รูปหน้า Shiny (GitHub)
+        `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/shiny/${pokemonId}.png`,
 
-    // 1. ใช้รูป official artwork
-    `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/${pokemonId}.png`,
+        // 1. ใช้รูป official artwork Shiny
+        `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/shiny/${pokemonId}.png`,
 
-    // 2. ใช้รูปจาก Dream World
-    `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/dream-world/${pokemonId}.svg`,
+        // 2. ใช้รูปจาก Pokemon Home Shiny
+        `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/home/shiny/${pokemonId}.png`,
 
-    // 3. ใช้รูปจาก Pokemon Home
-    `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/home/${pokemonId}.png`,
+        // 3. ใช้รูปหลัง Shiny (GitHub)
+        `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/back/shiny/${pokemonId}.png`,
 
-    // 4. ใช้รูปหลัง (GitHub)
-    `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/back/${pokemonId}.png`,
+        // 4. ถ้าไม่มีรูป Shiny ให้ลองใช้รูปปกติ
+        `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${pokemonId}.png`,
+        `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/${pokemonId}.png`,
 
-    // ถ้าไม่มีรูปไหนเลย ให้ใช้รูปว่าง (เพื่อป้องกัน loop)
-    '/no-image.png',
-  ]
+        // ถ้าไม่มีรูปไหนเลย ให้ใช้รูปว่าง (เพื่อป้องกัน loop)
+        '/no-image.png',
+      ]
+    : [
+        // 0. ใช้รูปหน้า (GitHub)
+        `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${pokemonId}.png`,
+
+        // 1. ใช้รูป official artwork
+        `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/${pokemonId}.png`,
+
+        // 2. ใช้รูปจาก Dream World
+        `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/dream-world/${pokemonId}.svg`,
+
+        // 3. ใช้รูปจาก Pokemon Home
+        `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/home/${pokemonId}.png`,
+
+        // 4. ใช้รูปหลัง (GitHub)
+        `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/back/${pokemonId}.png`,
+
+        // ถ้าไม่มีรูปไหนเลย ให้ใช้รูปว่าง (เพื่อป้องกัน loop)
+        '/no-image.png',
+      ]
 
   // หา URL ถัดไปที่ยังไม่เคยลองใช้
   for (const url of fallbackUrls) {
@@ -437,6 +596,226 @@ const getPokemonImageUrl = (pokemon: PokemonDetail) => {
 
   // ถ้าไม่มีข้อมูล sprites ให้ใช้ URL เริ่มต้น
   return `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${pokemon.id}.png`
+}
+
+// ฟังก์ชันสำหรับเลือก Pokemon
+const selectPokemon = async (pokemon: PokemonDetail) => {
+  selectedPokemon.value = pokemon
+  isShiny.value = false // รีเซ็ตสถานะ Shiny เมื่อเลือก Pokemon ใหม่
+
+  // ดึงข้อมูลเพิ่มเติมของ Pokemon
+  await fetchPokemonSpecies(pokemon.id)
+  await fetchTypeWeaknesses(pokemon.types?.map((t) => t.type.name) || [])
+}
+
+// ฟังก์ชันสำหรับดึงข้อมูลเพิ่มเติมของ Pokemon (คำอธิบาย, เพศ, ฯลฯ)
+const fetchPokemonSpecies = async (pokemonId: number) => {
+  try {
+    const response = await axios.get(`https://pokeapi.co/api/v2/pokemon-species/${pokemonId}`)
+    pokemonSpecies.value = response.data
+
+    // ดึงข้อมูล evolution chain
+    if (response.data.evolution_chain?.url) {
+      await fetchEvolutionChain(response.data.evolution_chain.url)
+    }
+  } catch (error) {
+    console.error('Error fetching Pokemon species:', error)
+    pokemonSpecies.value = null
+  }
+}
+
+// ฟังก์ชันสำหรับดึงข้อมูล evolution chain
+const fetchEvolutionChain = async (url: string) => {
+  try {
+    const response = await axios.get(url)
+    evolutionChain.value = response.data
+  } catch (error) {
+    console.error('Error fetching evolution chain:', error)
+    evolutionChain.value = null
+  }
+}
+
+// ฟังก์ชันสำหรับคำนวณความสัมพันธ์ของธาตุ (ทั้งแพ้และชนะ)
+const fetchTypeWeaknesses = async (types: string[]) => {
+  try {
+    // รีเซ็ตค่า
+    typeWeaknesses.value = []
+    typeResistances.value = []
+
+    // ดึงข้อมูลความสัมพันธ์ของแต่ละประเภท
+    const typePromises = types.map((type) => axios.get(`https://pokeapi.co/api/v2/type/${type}`))
+    const typeResponses = await Promise.all(typePromises)
+
+    // สร้าง Map เก็บค่าความอ่อนแอต่อแต่ละประเภท (2 = double damage, 0.5 = half damage, 0 = no damage)
+    const effectivenessMap = new Map<string, number>()
+
+    // วนลูปผ่านแต่ละประเภทของ Pokemon
+    typeResponses.forEach((response) => {
+      const damageRelations = response.data.damage_relations as DamageRelations
+
+      // ประเภทที่ทำให้ Pokemon รับ double damage
+      damageRelations.double_damage_from.forEach((type) => {
+        const typeName = type.name
+        effectivenessMap.set(typeName, (effectivenessMap.get(typeName) || 1) * 2)
+      })
+
+      // ประเภทที่ทำให้ Pokemon รับ half damage
+      damageRelations.half_damage_from.forEach((type) => {
+        const typeName = type.name
+        effectivenessMap.set(typeName, (effectivenessMap.get(typeName) || 1) * 0.5)
+      })
+
+      // ประเภทที่ทำให้ Pokemon รับ no damage
+      damageRelations.no_damage_from.forEach((type) => {
+        const typeName = type.name
+        effectivenessMap.set(typeName, 0)
+      })
+    })
+
+    // แปลงข้อมูลจาก Map เป็น Array ของ TypeEffectiveness
+    const typeEffectiveness = Array.from(effectivenessMap.entries()).map(
+      ([type, effectiveness]) => ({
+        type,
+        effectiveness,
+      }),
+    )
+
+    // แยกประเภทที่ Pokemon แพ้ (รับ damage มากกว่าปกติ)
+    typeWeaknesses.value = typeEffectiveness
+      .filter((item) => item.effectiveness > 1)
+      .sort((a, b) => b.effectiveness - a.effectiveness) // เรียงจากแพ้มากไปน้อย
+
+    // แยกประเภทที่ Pokemon ต้านทาน (รับ damage น้อยกว่าปกติ)
+    typeResistances.value = typeEffectiveness
+      .filter((item) => item.effectiveness < 1 && item.effectiveness > 0)
+      .sort((a, b) => a.effectiveness - b.effectiveness) // เรียงจากต้านทานมากไปน้อย
+  } catch (error) {
+    console.error('Error calculating type relationships:', error)
+    typeWeaknesses.value = []
+    typeResistances.value = []
+  }
+}
+
+// ฟังก์ชันสำหรับเปลี่ยนไปยัง Pokemon ก่อนหน้า
+const goToPreviousPokemon = () => {
+  if (selectedPokemon.value) {
+    const currentIndex = fullPokemonList.value.findIndex((p) => p.id === selectedPokemon.value?.id)
+    if (currentIndex > 0) {
+      selectPokemon(fullPokemonList.value[currentIndex - 1])
+    }
+  }
+}
+
+// ฟังก์ชันสำหรับเปลี่ยนไปยัง Pokemon ถัดไป
+const goToNextPokemon = () => {
+  if (selectedPokemon.value) {
+    const currentIndex = fullPokemonList.value.findIndex((p) => p.id === selectedPokemon.value?.id)
+    if (currentIndex < fullPokemonList.value.length - 1) {
+      selectPokemon(fullPokemonList.value[currentIndex + 1])
+    }
+  }
+}
+
+// ฟังก์ชันสำหรับสลับระหว่างรูปปกติและรูป Shiny
+const toggleShiny = () => {
+  isShiny.value = !isShiny.value
+}
+
+// ฟังก์ชันสำหรับดึง URL รูปภาพของ Pokemon ที่เลือก
+const getSelectedPokemonImageUrl = () => {
+  if (!selectedPokemon.value) return ''
+
+  const pokemon = selectedPokemon.value
+  const id = pokemon.id
+
+  // ถ้าเป็นโหมด Shiny
+  if (isShiny.value) {
+    // ลำดับความสำคัญของรูป Shiny
+    const shinyUrls = [
+      // 1. Official artwork shiny
+      pokemon.sprites?.other?.['official-artwork']?.front_shiny,
+
+      // 2. Front shiny
+      pokemon.sprites?.front_shiny,
+      `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/shiny/${id}.png`,
+
+      // 3. Home shiny
+      pokemon.sprites?.other?.home?.front_shiny,
+
+      // 4. Back shiny
+      pokemon.sprites?.back_shiny,
+      `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/back/shiny/${id}.png`,
+    ]
+
+    // ใช้ URL แรกที่ไม่เป็น undefined หรือ null
+    for (const url of shinyUrls) {
+      if (url) return url
+    }
+
+    // ถ้าไม่มีรูป Shiny ให้ใช้รูปปกติแทน
+    return getPokemonImageUrl(pokemon)
+  }
+
+  // ถ้าเป็นโหมดปกติ ใช้ฟังก์ชัน getPokemonImageUrl ที่มีอยู่แล้ว
+  return getPokemonImageUrl(pokemon)
+}
+
+// ฟังก์ชันสำหรับดึงคำอธิบาย Pokemon ในภาษาอังกฤษ
+const getPokemonDescription = () => {
+  if (!pokemonSpecies.value) return 'No description available.'
+
+  // หาคำอธิบายในภาษาอังกฤษ
+  const englishFlavorText = pokemonSpecies.value.flavor_text_entries.find(
+    (entry) => entry.language.name === 'en',
+  )
+
+  return englishFlavorText
+    ? englishFlavorText.flavor_text.replace(/\f/g, ' ')
+    : 'No description available.'
+}
+
+// ฟังก์ชันสำหรับแปลงค่า gender_rate เป็นอัตราส่วนเพศ
+const getGenderRatio = () => {
+  if (!pokemonSpecies.value || pokemonSpecies.value.gender_rate === -1) {
+    return 'Genderless'
+  }
+
+  const femaleRate = (pokemonSpecies.value.gender_rate / 8) * 100
+  const maleRate = 100 - femaleRate
+
+  return `♂ ${maleRate}% ♀ ${femaleRate}%`
+}
+
+// ฟังก์ชันสำหรับดึงข้อมูล evolution chain ในรูปแบบที่ใช้งานง่าย
+const getEvolutionChainData = () => {
+  if (!evolutionChain.value) return []
+
+  const evoData: { id: number; name: string; minLevel?: number }[] = []
+  let currentChain = evolutionChain.value.chain
+
+  // เริ่มจาก base form
+  if (currentChain.species) {
+    // ดึง ID จาก URL
+    const id = parseInt(currentChain.species.url.split('/').filter(Boolean).pop() || '0')
+    evoData.push({ id, name: currentChain.species.name })
+
+    // ตรวจสอบ evolution ถัดไป
+    while (currentChain.evolves_to && currentChain.evolves_to.length > 0) {
+      currentChain = currentChain.evolves_to[0] // เอาแค่สายวิวัฒนาการหลัก
+
+      // ดึงข้อมูลเงื่อนไขการวิวัฒนาการ
+      let minLevel
+      if (currentChain.evolution_details && currentChain.evolution_details.length > 0) {
+        minLevel = currentChain.evolution_details[0].min_level
+      }
+
+      // ดึง ID จาก URL
+      const id = parseInt(currentChain.species.url.split('/').filter(Boolean).pop() || '0')
+      evoData.push({ id, name: currentChain.species.name, minLevel })
+    }
+  }
+
+  return evoData
 }
 
 onMounted(async () => {
