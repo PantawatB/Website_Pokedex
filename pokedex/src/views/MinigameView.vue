@@ -539,27 +539,27 @@ const resetGame = () => {
 // กำหนดสีของป้ายประเภทโปเกมอน
 const getTypeClass = (type: string) => {
   const typeClasses: Record<string, string> = {
-    normal: 'bg-gray-300 text-gray-800',
+    normal: 'bg-gray-500 text-white',
     fire: 'bg-red-400 text-white',
-    water: 'bg-blue-400 text-white',
-    electric: 'bg-yellow-300 text-yellow-800',
-    grass: 'bg-green-400 text-white',
-    ice: 'bg-blue-200 text-blue-800',
-    fighting: 'bg-red-600 text-white',
-    poison: 'bg-purple-500 text-white', // กำหนดสีในป้ายธาตุต่างๆ
-    ground: 'bg-yellow-600 text-white',
-    flying: 'bg-indigo-300 text-indigo-800',
+    water: 'bg-blue-500 text-white',
+    electric: 'bg-yellow-400 text-white',
+    grass: 'bg-green-500 text-white',
+    ice: 'bg-cyan-400 text-white',
+    fighting: 'bg-orange-400 text-white',
+    poison: 'bg-purple-400 text-white',
+    ground: 'bg-amber-700 text-white',
+    flying: 'bg-indigo-600 text-white',
     psychic: 'bg-pink-400 text-white',
-    bug: 'bg-lime-400 text-lime-800',
-    rock: 'bg-yellow-700 text-white',
-    ghost: 'bg-purple-700 text-white',
-    dragon: 'bg-indigo-600 text-white',
-    dark: 'bg-gray-700 text-white',
-    steel: 'bg-gray-400 text-white',
-    fairy: 'bg-pink-300 text-pink-800',
+    bug: 'bg-lime-500 text-white',
+    rock: 'bg-yellow-600 text-white',
+    ghost: 'bg-violet-500 text-white',
+    dragon: 'bg-indigo-400 text-white',
+    dark: 'bg-gray-800 text-white',
+    steel: 'bg-slate-400 text-white',
+    fairy: 'bg-rose-400 text-white',
   }
 
-  return typeClasses[type] || 'bg-gray-200 text-gray-800'
+  return typeClasses[type] || 'bg-gray-300 text-white'
 }
 
 // โหลดข้อมูลตอนเริ่มต้น

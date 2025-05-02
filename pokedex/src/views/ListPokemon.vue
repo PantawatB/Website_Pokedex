@@ -106,8 +106,15 @@
               @error="(e) => handleImageError(e, item.id)"
             />
             <div class="capitalize font-bold mb-2">{{ item.name }}</div>
-            <div class="text-xs px-2 py-1 rounded-full bg-green-200 text-gray-900 font-normal">
-              GRASS
+            <div class="flex gap-2 justify-center">
+              <span
+                v-for="(typeObj, index) in item.types"
+                :key="index"
+                class="text-xs px-2 py-1 rounded-full font-semibold capitalize"
+                :class="getTypeClass(typeObj.type.name)"
+              >
+                {{ typeObj.type.name }}
+              </span>
             </div>
           </div>
         </div>
@@ -117,14 +124,91 @@
           <div class="flex flex-col items-center">
             <div class="h-20 w-20 bg-gray-200 rounded-full mb-4"></div>
             <!-- Placeholder for big Pokémon image -->
-            <div class="text-2xl font-bold mb-2">Empoleon</div>
-            <div class="text-gray-500 text-sm mb-4">Emperor Pokémon</div>
+            <div class="text-2xl text-center font-bold mb-2">Please select any Pokémon</div>
+            <div class="text-gray-500 text-sm mb-4">This is pokemon detail</div>
 
-            <div class="flex gap-2 mb-4">
-              <span class="px-3 py-1 bg-blue-200 text-blue-800 rounded-full text-xs">WATER</span>
-              <span class="px-3 py-1 bg-gray-300 text-gray-700 rounded-full text-xs">STEEL</span>
+            <!-- Placeholder for types -->
+            <div class="flex gap-2 mb-4 justify-center">
+              <span class="px-3 py-1 bg-gray-300 text-gray-700 rounded-full text-xs"
+                >Select a Pokémon</span
+              >
             </div>
-
+            <!-- Preview สีของแต่ละ Type For Testing -->
+            <!-- <div class="flex flex-wrap gap-2 justify-center">
+              <span
+                class="px-3 py-1 rounded-full text-xs font-semibold capitalize bg-gray-500 text-white"
+                >normal</span
+              >
+              <span
+                class="px-3 py-1 rounded-full text-xs font-semibold capitalize bg-red-400 text-white"
+                >fire</span
+              >
+              <span
+                class="px-3 py-1 rounded-full text-xs font-semibold capitalize bg-blue-500 text-white"
+                >water</span
+              >
+              <span
+                class="px-3 py-1 rounded-full text-xs font-semibold capitalize bg-yellow-400 text-white"
+                >electric</span
+              >
+              <span
+                class="px-3 py-1 rounded-full text-xs font-semibold capitalize bg-green-500 text-white"
+                >grass</span
+              >
+              <span
+                class="px-3 py-1 rounded-full text-xs font-semibold capitalize bg-cyan-400 text-white"
+                >ice</span
+              >
+              <span
+                class="px-3 py-1 rounded-full text-xs font-semibold capitalize bg-orange-400 text-white"
+                >fighting</span
+              >
+              <span
+                class="px-3 py-1 rounded-full text-xs font-semibold capitalize bg-purple-400 text-white"
+                >poison</span
+              >
+              <span
+                class="px-3 py-1 rounded-full text-xs font-semibold capitalize bg-amber-700 text-white"
+                >ground</span
+              >
+              <span
+                class="px-3 py-1 rounded-full text-xs font-semibold capitalize bg-indigo-600 text-white"
+                >flying</span
+              >
+              <span
+                class="px-3 py-1 rounded-full text-xs font-semibold capitalize bg-pink-400 text-white"
+                >psychic</span
+              >
+              <span
+                class="px-3 py-1 rounded-full text-xs font-semibold capitalize bg-lime-500 text-white"
+                >bug</span
+              >
+              <span
+                class="px-3 py-1 rounded-full text-xs font-semibold capitalize bg-yellow-600 text-white"
+                >rock</span
+              >
+              <span
+                class="px-3 py-1 rounded-full text-xs font-semibold capitalize bg-violet-500 text-white"
+                >ghost</span
+              >
+              <span
+                class="px-3 py-1 rounded-full text-xs font-semibold capitalize bg-indigo-400 text-white"
+                >dragon</span
+              >
+              <span
+                class="px-3 py-1 rounded-full text-xs font-semibold capitalize bg-gray-800 text-white"
+                >dark</span
+              >
+              <span
+                class="px-3 py-1 rounded-full text-xs font-semibold capitalize bg-slate-400 text-white"
+                >steel</span
+              >
+              <span
+                class="px-3 py-1 rounded-full text-xs font-semibold capitalize bg-rose-400 text-white"
+                >fairy</span
+              >
+            </div> -->
+            <!-- /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////// -->
             <!-- <p class="text-gray-600 text-center text-sm mb-6">
               It swims as fast as a jet boat. The edges of its wings are sharp and can slice apart
               drifting ice.
@@ -220,6 +304,7 @@ const all1025Pokemon = async () => {
     height: res.data.height,
     weight: res.data.weight,
     sprites: res.data.sprites, // เพิ่มข้อมูลรูปภาพ
+    types: res.data.types, // เพิ่มข้อมูลประเภทของโปเกมอน
   }))
 }
 // ตัวแปรเก็บข้อมูลว่าได้ลองใช้รูปภาพใดแล้วบ้างสำหรับแต่ละ Pokemon
@@ -290,6 +375,32 @@ const handleImageError = (event: Event, pokemonId: number) => {
 }
 
 // ฟังก์ชันสำหรับเลือก URL รูปภาพที่เหมาะสม
+// กำหนดสีของป้ายประเภทโปเกมอน
+const getTypeClass = (type: string) => {
+  const typeClasses: Record<string, string> = {
+    normal: 'bg-gray-500 text-white',
+    fire: 'bg-red-400 text-white',
+    water: 'bg-blue-500 text-white',
+    electric: 'bg-yellow-400 text-white',
+    grass: 'bg-green-500 text-white',
+    ice: 'bg-cyan-400 text-white',
+    fighting: 'bg-orange-400 text-white',
+    poison: 'bg-purple-400 text-white',
+    ground: 'bg-amber-700 text-white',
+    flying: 'bg-indigo-600 text-white',
+    psychic: 'bg-pink-400 text-white',
+    bug: 'bg-lime-500 text-white',
+    rock: 'bg-yellow-600 text-white',
+    ghost: 'bg-violet-500 text-white',
+    dragon: 'bg-indigo-400 text-white',
+    dark: 'bg-gray-800 text-white',
+    steel: 'bg-slate-400 text-white',
+    fairy: 'bg-rose-400 text-white',
+  }
+
+  return typeClasses[type] || 'bg-gray-300 text-white'
+}
+
 const getPokemonImageUrl = (pokemon: PokemonDetail) => {
   // ถ้ามีข้อมูล sprites ให้ใช้ตามลำดับความสำคัญ
   if (pokemon.sprites) {

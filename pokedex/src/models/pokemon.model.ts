@@ -29,4 +29,11 @@ export interface PokemonDetail {
       }
     }
   }
+  types?: Array<{
+    slot: number
+    type: {
+      name: string
+      url: string
+    }
+  }>
 }
