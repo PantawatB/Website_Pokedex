@@ -26,9 +26,10 @@
       <!-- รูป Pikachu -->
       <div class="text-center fade-in">
         <img
-          src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/25.png"
+          :src="getPokemonImageUrl(25)"
           alt="Pikachu"
           class="mx-auto w-28 h-28"
+          @error="(e) => handleImageError(e, 25)"
         />
         <p class="mt-2 text-sm text-gray-500 italic">
           "Pikachu" – โปเกมอนที่เป็นไอคอนของโลก Pokémon
@@ -58,9 +59,10 @@
             class="bg-white rounded-lg p-6 shadow-md space-y-2"
           >
             <img
-              :src="`https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${id}.png`"
+              :src="getPokemonImageUrl(id)"
               class="mx-auto w-20 h-20 transition-transform duration-500 ease-in-out hover:scale-110"
               alt="Popular Pokémon"
+              @error="(e) => handleImageError(e, id)"
             />
             <div class="capitalize text-sm text-gray-600">{{ getPokemonName(id) }}</div>
             <button
@@ -83,9 +85,10 @@
             class="flex-shrink-0 bg-white p-6 w-32 h-32 rounded-lg shadow-md flex flex-col items-center justify-center transition-all duration-500 ease-in-out transform hover:scale-110"
           >
             <img
-              :src="`https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${id}.png`"
+              :src="getPokemonImageUrl(id)"
               class="w-16 h-16"
               alt="Pokémon Carousel"
+              @error="(e) => handleImageError(e, id)"
             />
             <div class="mt-2 text-xs capitalize">{{ getPokemonName(id) }}</div>
           </div>
@@ -101,9 +104,10 @@
       <div class="bg-white p-6 rounded-lg shadow-lg w-80">
         <h2 class="text-xl font-bold mb-4">{{ getPokemonName(selectedPokemon) }}</h2>
         <img
-          :src="`https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${selectedPokemon}.png`"
+          :src="selectedPokemon ? getPokemonImageUrl(selectedPokemon) : ''"
           alt="Pokemon"
           class="mx-auto w-32 h-32 mb-4"
+          @error="(e) => selectedPokemon && handleImageError(e, selectedPokemon)"
         />
         <p class="text-gray-700 mb-4">รายละเอียดเกี่ยวกับ {{ getPokemonName(selectedPokemon) }}</p>
         <div v-if="pokemonDetails[selectedPokemon]">
@@ -124,6 +128,7 @@
 
 <script setup lang="ts">
 import MainWeb from '@/components/MainWeb.vue'
+import { ref } from 'vue'
 
 const pokemonNames: Record<number, string> = {
   1: 'bulbasaur',
@@ -147,6 +152,97 @@ const pokemonDetails: Record<number, { type: string[]; height: number; weight: n
   39: { type: ['fairy'], height: 0.5, weight: 5.5 },
   150: { type: ['psychic'], height: 2.0, weight: 122.0 },
   151: { type: ['psychic'], height: 0.4, weight: 7.0 },
+}
+
+// ตัวแปรเก็บข้อมูลว่าได้ลองใช้รูปภาพใดแล้วบ้างสำหรับแต่ละ Pokemon
+const imageAttempts = ref<Record<number, string[]>>({})
+
+// ฟังก์ชันจัดการเมื่อรูปภาพโหลดไม่สำเร็จ
+const handleImageError = (event: Event, pokemonId: number) => {
+  // ลองใช้รูปภาพสำรองจากแหล่งอื่น
+  const imgElement = event.target as HTMLImageElement
+  const currentSrc = imgElement.src
+
+  // ตรวจสอบว่าเป็นรูป no-image.png หรือไม่ ถ้าใช่ให้หยุดการทำงาน
+  if (currentSrc.includes('/no-image.png')) {
+    console.log(`Stopped trying to load image for Pokemon #${pokemonId} to prevent infinite loop`)
+    return
+  }
+
+  // สร้าง array เก็บประวัติการลองใช้รูปภาพสำหรับ Pokemon นี้ ถ้ายังไม่มี
+  if (!imageAttempts.value[pokemonId]) {
+    imageAttempts.value[pokemonId] = []
+  }
+
+  // เพิ่ม URL ปัจจุบันเข้าไปในประวัติ
+  imageAttempts.value[pokemonId].push(currentSrc)
+
+  // ลองใช้รูปภาพสำรองตามลำดับความสำคัญ
+  const fallbackUrls = [
+    // 0. ใช้รูปหน้า (GitHub)
+    `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${pokemonId}.png`,
+
+    // 1. ใช้รูป official artwork
+    `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/${pokemonId}.png`,
+
+    // 2. ใช้รูปจาก Dream World
+    `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/dream-world/${pokemonId}.svg`,
+
+    // 3. ใช้รูปจาก Pokemon Home
+    `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/home/${pokemonId}.png`,
+
+    // 4. ใช้รูปหลัง (GitHub)
+    `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/back/${pokemonId}.png`,
+
+    // ถ้าไม่มีรูปไหนเลย ให้ใช้รูปว่าง (เพื่อป้องกัน loop)
+    '/no-image.png',
+  ]
+
+  // หา URL ถัดไปที่ยังไม่เคยลองใช้
+  for (const url of fallbackUrls) {
+    // ข้ามถ้า URL เป็น undefined หรือเป็น URL เดิม
+    if (!url || url === currentSrc) {
+      continue
+    }
+
+    // ข้ามถ้าเคยลองใช้ URL นี้แล้ว
+    if (imageAttempts.value[pokemonId].includes(url)) {
+      continue
+    }
+
+    // ใช้ URL นี้
+    console.log(`Trying next image source for Pokemon #${pokemonId}: ${url}`)
+    imgElement.src = url
+    return
+  }
+
+  // ถ้าลองทุก URL แล้วยังไม่สำเร็จ ให้ใช้รูป no-image.png
+  console.log(`All image sources failed for Pokemon #${pokemonId}, using no-image placeholder`)
+  imgElement.src = '/no-image.png'
+}
+
+// ฟังก์ชันสำหรับเลือก URL รูปภาพที่เหมาะสม
+const getPokemonImageUrl = (pokemonId: number) => {
+  // สร้าง array ของ URL ที่เป็นไปได้ตามลำดับความสำคัญ
+  const possibleUrls = [
+    // 0. ใช้รูปหน้า (GitHub)
+    `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${pokemonId}.png`,
+
+    // 1. ใช้รูป official artwork
+    `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/${pokemonId}.png`,
+
+    // 2. ใช้รูปจาก Dream World
+    `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/dream-world/${pokemonId}.svg`,
+
+    // 3. ใช้รูปจาก Pokemon Home
+    `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/home/${pokemonId}.png`,
+
+    // 4. ใช้รูปหลัง (GitHub)
+    `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/back/${pokemonId}.png`,
+  ]
+
+  // ใช้ URL แรกในลำดับความสำคัญ (เนื่องจากเราไม่มีข้อมูล sprites จาก API ในหน้านี้)
+  return possibleUrls[0]
 }
 
 const getPokemonName = (id: number) => {

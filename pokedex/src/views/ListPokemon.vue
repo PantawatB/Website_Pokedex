@@ -247,17 +247,19 @@ const handleImageError = (event: Event, pokemonId: number) => {
 
   // ลองใช้รูปภาพสำรองตามลำดับความสำคัญ
   const fallbackUrls = [
-    // 0. ใช้รูปหน้า (GitHub หรือ Dream World)
+    // 0. ใช้รูปหน้า (GitHub)
     `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${pokemonId}.png`,
-    `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/dream-world/${pokemonId}.svg`,
 
     // 1. ใช้รูป official artwork
     `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/${pokemonId}.png`,
 
-    // 2. ใช้รูปจาก Pokemon Home
+    // 2. ใช้รูปจาก Dream World
+    `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/dream-world/${pokemonId}.svg`,
+
+    // 3. ใช้รูปจาก Pokemon Home
     `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/home/${pokemonId}.png`,
 
-    // 3. ใช้รูปหลัง (GitHub)
+    // 4. ใช้รูปหลัง (GitHub)
     `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/back/${pokemonId}.png`,
 
     // ถ้าไม่มีรูปไหนเลย ให้ใช้รูปว่าง (เพื่อป้องกัน loop)
@@ -293,18 +295,20 @@ const getPokemonImageUrl = (pokemon: PokemonDetail) => {
   if (pokemon.sprites) {
     // สร้าง array ของ URL ที่เป็นไปได้ตามลำดับความสำคัญ
     const possibleUrls = [
-      // 0. ใช้รูปหน้า (API, GitHub หรือ Dream World)
+      // 0. ใช้รูปหน้า (API หรือ GitHub)
       pokemon.sprites.front_default,
       `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${pokemon.id}.png`,
-      pokemon.sprites.other?.['dream-world']?.front_default,
 
       // 1. ใช้รูป official artwork
       pokemon.sprites.other?.['official-artwork']?.front_default,
 
-      // 2. ใช้รูปจาก Pokemon Home
+      // 2. ใช้รูปจาก Dream World
+      pokemon.sprites.other?.['dream-world']?.front_default,
+
+      // 3. ใช้รูปจาก Pokemon Home
       pokemon.sprites.other?.home?.front_default,
 
-      // 3. ใช้รูปหลัง (API หรือ GitHub)
+      // 4. ใช้รูปหลัง (API หรือ GitHub)
       pokemon.sprites.back_default,
       `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/back/${pokemon.id}.png`,
     ]
