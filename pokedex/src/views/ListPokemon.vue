@@ -80,12 +80,290 @@
       </div>
 
       <!-- Pokémon Grid -->
-      <div class="flex gap-8 mt-10">
+      <div class="flex flex-col lg:flex-row gap-4 mt-6">
+        <!-- Mobile Pokemon Detail Modal (Shows as popup when a card is clicked) -->
+        <div
+          v-if="selectedPokemon && isMobileView && showMobileDetail"
+          class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-50"
+          @click.self="closeMobileDetail"
+        >
+          <div
+            class="w-full max-w-md bg-white p-4 rounded-lg shadow-md max-h-[90vh] overflow-y-auto"
+          >
+            <div class="flex justify-end mb-4">
+              <button @click="closeMobileDetail" class="text-gray-500 hover:text-gray-700">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  class="h-6 w-6"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M6 18L18 6M6 6l12 12"
+                  />
+                </svg>
+              </button>
+            </div>
+
+            <div class="flex flex-col items-center">
+              <!-- Pokemon Image with Shiny Toggle -->
+              <div class="flex flex-col items-center mb-4">
+                <img
+                  :src="getSelectedPokemonImageUrl()"
+                  :alt="selectedPokemon.name"
+                  class="w-32 h-32 object-contain mb-2"
+                  @error="(e) => selectedPokemon && handleImageError(e, selectedPokemon.id)"
+                />
+                <button
+                  @click="toggleShiny"
+                  class="bg-slate-800 text-xs px-3 py-1 rounded text-white"
+                >
+                  {{ isShiny ? 'Toggle to Normal' : 'Toggle to Shiny' }}
+                </button>
+              </div>
+
+              <!-- Pokemon ID and Name -->
+              <div class="text-gray-500 text-sm mb-1">#{{ selectedPokemon.id }}</div>
+              <div class="text-2xl text-center font-bold mb-2 capitalize">
+                {{ selectedPokemon.name }}
+              </div>
+
+              <!-- Pokemon Types -->
+              <div class="flex gap-2 mb-4 justify-center">
+                <span
+                  v-for="(typeObj, index) in selectedPokemon.types"
+                  :key="index"
+                  class="px-3 py-1 rounded-full text-xs font-semibold capitalize"
+                  :class="getTypeClass(typeObj.type.name)"
+                >
+                  {{ typeObj.type.name }}
+                </span>
+              </div>
+
+              <!-- Pokemon Description -->
+              <p v-if="pokemonSpecies" class="text-gray-600 text-center text-xs mb-4">
+                {{ getPokemonDescription() }}
+              </p>
+
+              <!-- Pokemon Abilities -->
+              <div
+                v-if="selectedPokemon.abilities && selectedPokemon.abilities.length > 0"
+                class="w-full mb-3"
+              >
+                <div class="text-xs mb-1 font-semibold">Abilities</div>
+                <div class="flex flex-wrap gap-1">
+                  <span
+                    v-for="(abilityObj, index) in selectedPokemon.abilities"
+                    :key="index"
+                    class="px-2 py-1 bg-gray-300 rounded capitalize text-xs"
+                    :class="{
+                      ' bg-slate-800 text-white  border-red-600 border-[px]': abilityObj.is_hidden,
+                    }"
+                  >
+                    {{ abilityObj.ability.name }}
+                    <span v-if="abilityObj.is_hidden" class="text-xs text-purple-300 ml-1"
+                      >(hidden)</span
+                    >
+                  </span>
+                </div>
+              </div>
+
+              <!-- Height and Weight -->
+              <div class="flex justify-between w-full text-xs text-gray-500 mb-3">
+                <div>
+                  <div class="font-bold text-gray-800">Height</div>
+                  <div>{{ (selectedPokemon.height / 10).toFixed(1) }}m</div>
+                </div>
+                <div>
+                  <div class="font-bold text-gray-800">Weight</div>
+                  <div>{{ (selectedPokemon.weight / 10).toFixed(1) }}kg</div>
+                </div>
+                <div v-if="pokemonSpecies">
+                  <div class="font-bold text-gray-800">Gender</div>
+                  <div>{{ getGenderRatio() }}</div>
+                </div>
+              </div>
+
+              <!-- Type Relationships -->
+              <div class="w-full mb-3">
+                <!-- Weaknesses -->
+                <div v-if="typeWeaknesses.length > 0" class="mb-2">
+                  <div class="text-xs font-semibold mb-1">Weaknesses</div>
+
+                  <!-- 4x Weaknesses -->
+                  <div v-if="typeWeaknesses.some((item) => item.effectiveness === 4)" class="mb-2">
+                    <div class="text-xs font-medium mb-1 text-black">
+                      Takes 4× more damage with:
+                    </div>
+                    <div class="flex flex-wrap gap-2">
+                      <span
+                        v-for="(item, index) in typeWeaknesses.filter(
+                          (item) => item.effectiveness === 4,
+                        )"
+                        :key="index"
+                        class="px-2 py-1 rounded-full text-xs font-semibold capitalize"
+                        :class="getTypeClass(item.type)"
+                      >
+                        {{ item.type }}
+                      </span>
+                    </div>
+                  </div>
+
+                  <!-- 2x Weaknesses -->
+                  <div v-if="typeWeaknesses.some((item) => item.effectiveness === 2)">
+                    <div class="text-xs font-medium mb-1 text-black">
+                      Takes 2× more damage with:
+                    </div>
+                    <div class="flex flex-wrap gap-2">
+                      <span
+                        v-for="(item, index) in typeWeaknesses.filter(
+                          (item) => item.effectiveness === 2,
+                        )"
+                        :key="index"
+                        class="px-2 py-1 rounded-full text-xs font-semibold capitalize"
+                        :class="getTypeClass(item.type)"
+                      >
+                        {{ item.type }}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Resistances -->
+                <div v-if="typeResistances.length > 0">
+                  <div class="text-xs font-semibold mb-1">Resistances</div>
+
+                  <!-- Immune -->
+                  <div v-if="typeResistances.some((item) => item.effectiveness === 0)" class="mb-2">
+                    <div class="text-xs font-medium mb-1 text-black">Immune to:</div>
+                    <div class="flex flex-wrap gap-2">
+                      <span
+                        v-for="(item, index) in typeResistances.filter(
+                          (item) => item.effectiveness === 0,
+                        )"
+                        :key="index"
+                        class="px-2 py-1 rounded-full text-xs font-semibold capitalize"
+                        :class="getTypeClass(item.type)"
+                      >
+                        {{ item.type }}
+                      </span>
+                    </div>
+                  </div>
+
+                  <!-- 1/4x Resistance -->
+                  <div
+                    v-if="typeResistances.some((item) => item.effectiveness === 0.25)"
+                    class="mb-2"
+                  >
+                    <div class="text-xs font-medium mb-1 text-black">
+                      Takes ¼× less damage with:
+                    </div>
+                    <div class="flex flex-wrap gap-2">
+                      <span
+                        v-for="(item, index) in typeResistances.filter(
+                          (item) => item.effectiveness === 0.25,
+                        )"
+                        :key="index"
+                        class="px-2 py-1 rounded-full text-xs font-semibold capitalize"
+                        :class="getTypeClass(item.type)"
+                      >
+                        {{ item.type }}
+                      </span>
+                    </div>
+                  </div>
+
+                  <!-- 1/2x Resistance -->
+                  <div v-if="typeResistances.some((item) => item.effectiveness === 0.5)">
+                    <div class="text-xs font-medium mb-1 text-black">
+                      Takes ½× less damage with:
+                    </div>
+                    <div class="flex flex-wrap gap-2">
+                      <span
+                        v-for="(item, index) in typeResistances.filter(
+                          (item) => item.effectiveness === 0.5,
+                        )"
+                        :key="index"
+                        class="px-2 py-1 rounded-full text-xs font-semibold capitalize"
+                        :class="getTypeClass(item.type)"
+                      >
+                        {{ item.type }}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Evolution Chain -->
+              <div v-if="evolutionChain" class="w-full mb-3">
+                <div class="text-xs font-semibold mb-1">Evolution Chain</div>
+                <div class="flex items-center justify-center gap-2">
+                  <div
+                    v-for="(evo, index) in getEvolutionChainData()"
+                    :key="evo.id"
+                    class="flex items-center"
+                  >
+                    <!-- Pokemon in evolution chain -->
+                    <div class="flex flex-col items-center">
+                      <img
+                        :src="`https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${evo.id}.png`"
+                        :alt="evo.name"
+                        class="w-12 h-12 object-contain"
+                      />
+                      <div class="text-xs capitalize">{{ evo.name }}</div>
+                      <div v-if="evo.minLevel" class="text-xs text-gray-500">
+                        Lv.{{ evo.minLevel }}
+                      </div>
+                    </div>
+
+                    <!-- Arrow between evolutions -->
+                    <div v-if="index < getEvolutionChainData().length - 1" class="mx-2">
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        class="h-5 w-5 text-gray-400"
+                        viewBox="0 0 20 20"
+                        fill="currentColor"
+                      >
+                        <path
+                          fill-rule="evenodd"
+                          d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z"
+                          clip-rule="evenodd"
+                        />
+                      </svg>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Navigation Buttons -->
+              <div class="flex justify-between w-full mt-4">
+                <button
+                  @click="goToPreviousPokemon"
+                  class="px-3 py-1 text-sm bg-slate-800 text-white rounded-md disabled:opacity-50"
+                  :disabled="!selectedPokemon || selectedPokemon.id <= 1"
+                >
+                  Previous
+                </button>
+
+                <button
+                  @click="goToNextPokemon"
+                  class="px-3 py-1 text-sm bg-slate-800 text-white rounded-md disabled:opacity-50"
+                  :disabled="!selectedPokemon || selectedPokemon.id >= fullPokemonList.length"
+                >
+                  Next
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
         <!-- Left Grid -->
-        <div class="flex-1 grid grid-cols-3 gap-6">
+        <div class="flex-1 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
           <div
             v-if="filteredPokemonList.length === 0 && searchkey.trim()"
-            class="col-span-3 text-center py-10"
+            class="col-span-1 sm:col-span-2 lg:col-span-3 text-center py-10"
           >
             <div class="text-xl font-semibold text-gray-500">
               No Pokémon found matching "{{ searchkey }}"
@@ -97,13 +375,13 @@
           <div
             v-for="item in filteredPokemonList"
             :key="item.id"
-            class="bg-white p-4 rounded-lg shadow-md flex flex-col items-center relative cursor-pointer transform transition-transform duration-300 hover:scale-105"
+            class="bg-white p-3 rounded-lg shadow-md flex flex-col items-center relative cursor-pointer transform transition-transform duration-300 hover:scale-105"
             @click="selectPokemon(item)"
           >
             <img
               :src="getPokemonImageUrl(item)"
               :alt="item.name"
-              class="w-24 h-24 object-contain"
+              class="w-20 h-20 object-contain"
               @error="(e) => handleImageError(e, item.id)"
             />
             <div class="capitalize font-bold mb-2">{{ item.name }}</div>
@@ -120,259 +398,266 @@
           </div>
         </div>
 
-        <!-- Right Sidebar -->
-        <div class="w-[320px] bg-white p-6 rounded-lg shadow-md">
-          <div class="relative mb-4">
-            <button
-              v-if="selectedPokemon"
-              @click="toggleShiny"
-              class="absolute top-0 right-0 bg-slate-800 text-xs px-2 py-1 rounded text-white"
-            >
-              {{ isShiny ? 'Toggle to Normal' : 'Toggle to Shiny' }}
-            </button>
-          </div>
-          <div v-if="!selectedPokemon" class="flex flex-col items-center">
+        <!-- Right Sidebar (Desktop) -->
+        <div
+          class="hidden lg:block w-auto min-w-[280px] max-w-[350px] bg-white p-4 rounded-lg shadow-md self-start sticky top-12 max-h-[calc(96vh-2rem)] overflow-y-auto"
+        >
+          <div v-if="!selectedPokemon" class="flex flex-col items-center py-8">
             <div class="h-20 w-20 bg-gray-200 rounded-full mb-4"></div>
-            <div class="text-2xl text-center font-bold mb-2">Please select any Pokémon</div>
+            <div class="text-xl text-center font-bold mb-2">Please select any Pokémon</div>
             <div class="text-gray-500 text-sm mb-4">Click on a Pokémon card to view details</div>
-            <div class="flex gap-2 mb-4 justify-center">
-              <span class="px-3 py-1 bg-gray-300 text-gray-700 rounded-full text-xs"
-                >Select a Pokémon</span
-              >
-            </div>
           </div>
 
-          <div v-else class="flex flex-col items-center">
-            <!-- Pokemon Image with Shiny Toggle -->
-            <div class="relative mb-4">
-              <img
-                :src="getSelectedPokemonImageUrl()"
-                :alt="selectedPokemon.name"
-                class="w-40 h-40 object-contain"
-                @error="(e) => selectedPokemon && handleImageError(e, selectedPokemon.id)"
-              />
-            </div>
-
-            <!-- Pokemon ID and Name -->
-            <div class="text-gray-500 text-sm mb-1">#{{ selectedPokemon.id }}</div>
-            <div class="text-2xl text-center font-bold mb-2 capitalize">
-              {{ selectedPokemon.name }}
-            </div>
-
-            <!-- Pokemon Types -->
-            <div class="flex gap-2 mb-4 justify-center">
-              <span
-                v-for="(typeObj, index) in selectedPokemon.types"
-                :key="index"
-                class="px-3 py-1 rounded-full text-xs font-semibold capitalize"
-                :class="getTypeClass(typeObj.type.name)"
+          <div v-else>
+            <div class="flex justify-end items-center mb-4">
+              <button
+                @click="toggleShiny"
+                class="bg-slate-800 text-xs px-2 py-1 rounded text-white"
               >
-                {{ typeObj.type.name }}
-              </span>
+                {{ isShiny ? 'Toggle to Normal' : 'Toggle to Shiny' }}
+              </button>
             </div>
 
-            <!-- Pokemon Description -->
-            <p v-if="pokemonSpecies" class="text-gray-600 text-center text-sm mb-6">
-              {{ getPokemonDescription() }}
-            </p>
+            <div class="flex flex-col items-center">
+              <!-- Pokemon Image with Shiny Toggle -->
+              <div class="relative mb-4">
+                <img
+                  :src="getSelectedPokemonImageUrl()"
+                  :alt="selectedPokemon.name"
+                  class="w-32 h-32 object-contain"
+                  @error="(e) => selectedPokemon && handleImageError(e, selectedPokemon.id)"
+                />
+              </div>
 
-            <!-- Pokemon Abilities -->
-            <div
-              v-if="selectedPokemon.abilities && selectedPokemon.abilities.length > 0"
-              class="w-full mb-6"
-            >
-              <div class="text-sm mb-2 font-semibold">Abilities</div>
-              <div class="flex flex-wrap gap-2">
+              <!-- Pokemon ID and Name -->
+              <div class="text-gray-500 text-sm mb-1">#{{ selectedPokemon.id }}</div>
+              <div class="text-2xl text-center font-bold mb-2 capitalize">
+                {{ selectedPokemon.name }}
+              </div>
+
+              <!-- Pokemon Types -->
+              <div class="flex gap-2 mb-4 justify-center">
                 <span
-                  v-for="(abilityObj, index) in selectedPokemon.abilities"
+                  v-for="(typeObj, index) in selectedPokemon.types"
                   :key="index"
-                  class="px-2 py-1 bg-gray-300 rounded capitalize"
-                  :class="{
-                    ' bg-slate-800 text-white  border-red-600 border-[px]': abilityObj.is_hidden,
-                  }"
+                  class="px-3 py-1 rounded-full text-xs font-semibold capitalize"
+                  :class="getTypeClass(typeObj.type.name)"
                 >
-                  {{ abilityObj.ability.name }}
-                  <span v-if="abilityObj.is_hidden" class="text-xs text-purple-300 ml-1"
-                    >(hidden)</span
-                  >
+                  {{ typeObj.type.name }}
                 </span>
               </div>
-            </div>
 
-            <!-- Height and Weight -->
-            <div class="flex justify-between w-full text-xs text-gray-500 mb-4">
-              <div>
-                <div class="font-bold text-gray-800">Height</div>
-                <div>{{ (selectedPokemon.height / 10).toFixed(1) }}m</div>
-              </div>
-              <div>
-                <div class="font-bold text-gray-800">Weight</div>
-                <div>{{ (selectedPokemon.weight / 10).toFixed(1) }}kg</div>
-              </div>
-              <div v-if="pokemonSpecies">
-                <div class="font-bold text-gray-800">Gender</div>
-                <div>{{ getGenderRatio() }}</div>
-              </div>
-            </div>
+              <!-- Pokemon Description -->
+              <p v-if="pokemonSpecies" class="text-gray-600 text-center text-xs mb-4">
+                {{ getPokemonDescription() }}
+              </p>
 
-            <!-- Type Relationships -->
-            <div class="w-full mb-6">
-              <!-- Weaknesses -->
-              <div v-if="typeWeaknesses.length > 0" class="mb-4">
-                <div class="text-sm font-semibold mb-2">Weaknesses</div>
-
-                <!-- 4x Weaknesses -->
-                <div v-if="typeWeaknesses.some((item) => item.effectiveness === 4)" class="mb-2">
-                  <div class="text-xs font-medium mb-1 text-black">Takes 4× more damage with:</div>
-                  <div class="flex flex-wrap gap-2">
-                    <span
-                      v-for="(item, index) in typeWeaknesses.filter(
-                        (item) => item.effectiveness === 4,
-                      )"
-                      :key="index"
-                      class="px-2 py-1 rounded-full text-xs font-semibold capitalize"
-                      :class="getTypeClass(item.type)"
+              <!-- Pokemon Abilities -->
+              <div
+                v-if="selectedPokemon.abilities && selectedPokemon.abilities.length > 0"
+                class="w-full mb-3"
+              >
+                <div class="text-xs mb-1 font-semibold">Abilities</div>
+                <div class="flex flex-wrap gap-1">
+                  <span
+                    v-for="(abilityObj, index) in selectedPokemon.abilities"
+                    :key="index"
+                    class="px-2 py-1 bg-gray-300 rounded capitalize"
+                    :class="{
+                      ' bg-slate-800 text-white  border-red-600 border-[px]': abilityObj.is_hidden,
+                    }"
+                  >
+                    {{ abilityObj.ability.name }}
+                    <span v-if="abilityObj.is_hidden" class="text-xs text-purple-300 ml-1"
+                      >(hidden)</span
                     >
-                      {{ item.type }}
-                    </span>
-                  </div>
-                </div>
-
-                <!-- 2x Weaknesses -->
-                <div v-if="typeWeaknesses.some((item) => item.effectiveness === 2)">
-                  <div class="text-xs font-medium mb-1 text-black">Takes 2× more damage with:</div>
-                  <div class="flex flex-wrap gap-2">
-                    <span
-                      v-for="(item, index) in typeWeaknesses.filter(
-                        (item) => item.effectiveness === 2,
-                      )"
-                      :key="index"
-                      class="px-2 py-1 rounded-full text-xs font-semibold capitalize"
-                      :class="getTypeClass(item.type)"
-                    >
-                      {{ item.type }}
-                    </span>
-                  </div>
+                  </span>
                 </div>
               </div>
 
-              <!-- Resistances -->
-              <div v-if="typeResistances.length > 0">
-                <div class="text-sm font-semibold mb-2">Resistances</div>
-
-                <!-- Immune -->
-                <div v-if="typeResistances.some((item) => item.effectiveness === 0)" class="mb-2">
-                  <div class="text-xs font-medium mb-1 text-black">Immune to:</div>
-                  <div class="flex flex-wrap gap-2">
-                    <span
-                      v-for="(item, index) in typeResistances.filter(
-                        (item) => item.effectiveness === 0,
-                      )"
-                      :key="index"
-                      class="px-2 py-1 rounded-full text-xs font-semibold capitalize"
-                      :class="getTypeClass(item.type)"
-                    >
-                      {{ item.type }}
-                    </span>
-                  </div>
+              <!-- Height and Weight -->
+              <div class="flex justify-between w-full text-xs text-gray-500 mb-4">
+                <div>
+                  <div class="font-bold text-gray-800">Height</div>
+                  <div>{{ (selectedPokemon.height / 10).toFixed(1) }}m</div>
                 </div>
-
-                <!-- 1/4x Resistance -->
-                <div
-                  v-if="typeResistances.some((item) => item.effectiveness === 0.25)"
-                  class="mb-2"
-                >
-                  <div class="text-xs font-medium mb-1 text-black">Takes ¼× less damage with:</div>
-                  <div class="flex flex-wrap gap-2">
-                    <span
-                      v-for="(item, index) in typeResistances.filter(
-                        (item) => item.effectiveness === 0.25,
-                      )"
-                      :key="index"
-                      class="px-2 py-1 rounded-full text-xs font-semibold capitalize"
-                      :class="getTypeClass(item.type)"
-                    >
-                      {{ item.type }}
-                    </span>
-                  </div>
+                <div>
+                  <div class="font-bold text-gray-800">Weight</div>
+                  <div>{{ (selectedPokemon.weight / 10).toFixed(1) }}kg</div>
                 </div>
-
-                <!-- 1/2x Resistance -->
-                <div v-if="typeResistances.some((item) => item.effectiveness === 0.5)">
-                  <div class="text-xs font-medium mb-1 text-black">Takes ½× less damage with:</div>
-                  <div class="flex flex-wrap gap-2">
-                    <span
-                      v-for="(item, index) in typeResistances.filter(
-                        (item) => item.effectiveness === 0.5,
-                      )"
-                      :key="index"
-                      class="px-2 py-1 rounded-full text-xs font-semibold capitalize"
-                      :class="getTypeClass(item.type)"
-                    >
-                      {{ item.type }}
-                    </span>
-                  </div>
+                <div v-if="pokemonSpecies">
+                  <div class="font-bold text-gray-800">Gender</div>
+                  <div>{{ getGenderRatio() }}</div>
                 </div>
               </div>
-            </div>
 
-            <!-- Evolution Chain -->
-            <div v-if="evolutionChain" class="w-full mb-6">
-              <div class="text-sm font-semibold mb-2">Evolution Chain</div>
-              <div class="flex items-center justify-center gap-2">
-                <div
-                  v-for="(evo, index) in getEvolutionChainData()"
-                  :key="evo.id"
-                  class="flex items-center"
-                >
-                  <!-- Pokemon in evolution chain -->
-                  <div class="flex flex-col items-center">
-                    <img
-                      :src="`https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${evo.id}.png`"
-                      :alt="evo.name"
-                      class="w-16 h-16 object-contain"
-                    />
-                    <div class="text-xs capitalize">{{ evo.name }}</div>
-                    <div v-if="evo.minLevel" class="text-xs text-gray-500">
-                      Lv.{{ evo.minLevel }}
+              <!-- Type Relationships -->
+              <div class="w-full mb-3">
+                <!-- Weaknesses -->
+                <div v-if="typeWeaknesses.length > 0" class="mb-2">
+                  <div class="text-xs font-semibold mb-1">Weaknesses</div>
+
+                  <!-- 4x Weaknesses -->
+                  <div v-if="typeWeaknesses.some((item) => item.effectiveness === 4)" class="mb-2">
+                    <div class="text-xs font-medium mb-1 text-black">
+                      Takes 4× more damage with:
+                    </div>
+                    <div class="flex flex-wrap gap-2">
+                      <span
+                        v-for="(item, index) in typeWeaknesses.filter(
+                          (item) => item.effectiveness === 4,
+                        )"
+                        :key="index"
+                        class="px-2 py-1 rounded-full text-xs font-semibold capitalize"
+                        :class="getTypeClass(item.type)"
+                      >
+                        {{ item.type }}
+                      </span>
                     </div>
                   </div>
 
-                  <!-- Arrow between evolutions -->
-                  <div v-if="index < getEvolutionChainData().length - 1" class="mx-2">
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      class="h-5 w-5 text-gray-400"
-                      viewBox="0 0 20 20"
-                      fill="currentColor"
-                    >
-                      <path
-                        fill-rule="evenodd"
-                        d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z"
-                        clip-rule="evenodd"
-                      />
-                    </svg>
+                  <!-- 2x Weaknesses -->
+                  <div v-if="typeWeaknesses.some((item) => item.effectiveness === 2)">
+                    <div class="text-xs font-medium mb-1 text-black">
+                      Takes 2× more damage with:
+                    </div>
+                    <div class="flex flex-wrap gap-2">
+                      <span
+                        v-for="(item, index) in typeWeaknesses.filter(
+                          (item) => item.effectiveness === 2,
+                        )"
+                        :key="index"
+                        class="px-2 py-1 rounded-full text-xs font-semibold capitalize"
+                        :class="getTypeClass(item.type)"
+                      >
+                        {{ item.type }}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Resistances -->
+                <div v-if="typeResistances.length > 0">
+                  <div class="text-xs font-semibold mb-1">Resistances</div>
+
+                  <!-- Immune -->
+                  <div v-if="typeResistances.some((item) => item.effectiveness === 0)" class="mb-2">
+                    <div class="text-xs font-medium mb-1 text-black">Immune to:</div>
+                    <div class="flex flex-wrap gap-2">
+                      <span
+                        v-for="(item, index) in typeResistances.filter(
+                          (item) => item.effectiveness === 0,
+                        )"
+                        :key="index"
+                        class="px-2 py-1 rounded-full text-xs font-semibold capitalize"
+                        :class="getTypeClass(item.type)"
+                      >
+                        {{ item.type }}
+                      </span>
+                    </div>
+                  </div>
+
+                  <!-- 1/4x Resistance -->
+                  <div
+                    v-if="typeResistances.some((item) => item.effectiveness === 0.25)"
+                    class="mb-2"
+                  >
+                    <div class="text-xs font-medium mb-1 text-black">
+                      Takes ¼× less damage with:
+                    </div>
+                    <div class="flex flex-wrap gap-2">
+                      <span
+                        v-for="(item, index) in typeResistances.filter(
+                          (item) => item.effectiveness === 0.25,
+                        )"
+                        :key="index"
+                        class="px-2 py-1 rounded-full text-xs font-semibold capitalize"
+                        :class="getTypeClass(item.type)"
+                      >
+                        {{ item.type }}
+                      </span>
+                    </div>
+                  </div>
+
+                  <!-- 1/2x Resistance -->
+                  <div v-if="typeResistances.some((item) => item.effectiveness === 0.5)">
+                    <div class="text-xs font-medium mb-1 text-black">
+                      Takes ½× less damage with:
+                    </div>
+                    <div class="flex flex-wrap gap-2">
+                      <span
+                        v-for="(item, index) in typeResistances.filter(
+                          (item) => item.effectiveness === 0.5,
+                        )"
+                        :key="index"
+                        class="px-2 py-1 rounded-full text-xs font-semibold capitalize"
+                        :class="getTypeClass(item.type)"
+                      >
+                        {{ item.type }}
+                      </span>
+                    </div>
                   </div>
                 </div>
               </div>
-            </div>
 
-            <!-- Navigation Buttons -->
-            <div class="flex justify-between w-full mt-4">
-              <button
-                @click="goToPreviousPokemon"
-                class="px-4 py-2 bg-slate-800 text-white rounded-md disabled:opacity-50"
-                :disabled="!selectedPokemon || selectedPokemon.id <= 1"
-              >
-                Previous
-              </button>
-              <button
-                @click="goToNextPokemon"
-                class="px-4 py-2 bg-slate-800 text-white rounded-md disabled:opacity-50"
-                :disabled="!selectedPokemon || selectedPokemon.id >= fullPokemonList.length"
-              >
-                Next
-              </button>
+              <!-- Evolution Chain -->
+              <div v-if="evolutionChain" class="w-full mb-3">
+                <div class="text-xs font-semibold mb-1">Evolution Chain</div>
+                <div class="flex items-center justify-center gap-2">
+                  <div
+                    v-for="(evo, index) in getEvolutionChainData()"
+                    :key="evo.id"
+                    class="flex items-center"
+                  >
+                    <!-- Pokemon in evolution chain -->
+                    <div class="flex flex-col items-center">
+                      <img
+                        :src="`https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${evo.id}.png`"
+                        :alt="evo.name"
+                        class="w-12 h-12 object-contain"
+                      />
+                      <div class="text-xs capitalize">{{ evo.name }}</div>
+                      <div v-if="evo.minLevel" class="text-xs text-gray-500">
+                        Lv.{{ evo.minLevel }}
+                      </div>
+                    </div>
+
+                    <!-- Arrow between evolutions -->
+                    <div v-if="index < getEvolutionChainData().length - 1" class="mx-2">
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        class="h-5 w-5 text-gray-400"
+                        viewBox="0 0 20 20"
+                        fill="currentColor"
+                      >
+                        <path
+                          fill-rule="evenodd"
+                          d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z"
+                          clip-rule="evenodd"
+                        />
+                      </svg>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Navigation Buttons -->
+              <div class="flex justify-between w-full mt-3">
+                <button
+                  @click="goToPreviousPokemon"
+                  class="px-3 py-1 text-sm bg-slate-800 text-white rounded-md disabled:opacity-50"
+                  :disabled="!selectedPokemon || selectedPokemon.id <= 1"
+                >
+                  Previous
+                </button>
+                <button
+                  @click="goToNextPokemon"
+                  class="px-3 py-1 text-sm bg-slate-800 text-white rounded-md disabled:opacity-50"
+                  :disabled="!selectedPokemon || selectedPokemon.id >= fullPokemonList.length"
+                >
+                  Next
+                </button>
+              </div>
             </div>
           </div>
         </div>
@@ -399,6 +684,26 @@ const selectedPokemon = ref<PokemonDetail | null>(null)
 const isShiny = ref(false) // สถานะการแสดงรูป Shiny
 const pokemonSpecies = ref<PokemonSpecies | null>(null) // ข้อมูลเพิ่มเติมของ Pokemon (คำอธิบาย, เพศ, ฯลฯ)
 const evolutionChain = ref<EvolutionChain | null>(null) // ข้อมูล evolution chain
+
+// ตัวแปรสำหรับ Mobile Popup
+const isMobileView = ref(false) // ตรวจสอบว่าเป็นหน้าจอขนาดเล็กหรือไม่
+const showMobileDetail = ref(false) // ควบคุมการแสดง/ซ่อน popup
+
+// ฟังก์ชันสำหรับปิด popup บนมือถือ
+const closeMobileDetail = () => {
+  showMobileDetail.value = false
+}
+
+// ฟังก์ชันสำหรับตรวจสอบขนาดหน้าจอ
+const checkScreenSize = () => {
+  isMobileView.value = window.innerWidth < 1024
+}
+
+// เพิ่ม event listener สำหรับการเปลี่ยนขนาดหน้าจอ
+onMounted(() => {
+  checkScreenSize()
+  window.addEventListener('resize', checkScreenSize)
+})
 // ข้อมูลความสัมพันธ์ของธาตุ
 interface TypeEffectiveness {
   type: string
@@ -606,6 +911,11 @@ const selectPokemon = async (pokemon: PokemonDetail) => {
   // ดึงข้อมูลเพิ่มเติมของ Pokemon
   await fetchPokemonSpecies(pokemon.id)
   await fetchTypeWeaknesses(pokemon.types?.map((t) => t.type.name) || [])
+
+  // แสดง popup บนมือถือ
+  if (isMobileView.value) {
+    showMobileDetail.value = true
+  }
 }
 
 // ฟังก์ชันสำหรับดึงข้อมูลเพิ่มเติมของ Pokemon (คำอธิบาย, เพศ, ฯลฯ)
