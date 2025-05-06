@@ -18,9 +18,9 @@
       <li class="hover:text-black hover:scale-105 transition-all">
         <router-link :to="{ name: 'minigame' }">Mini Game</router-link>
       </li>
-      <li class="hover:text-black hover:scale-105 transition-all">
+      <!-- <li class="hover:text-black hover:scale-105 transition-all">
         <router-link :to="{ name: 'contactme' }">Contact me</router-link>
-      </li>
+      </li> -->
       <li class="hover:text-black hover:scale-105 transition-all">
         <router-link :to="{ name: 'tutorial' }">Tutorial</router-link>
       </li>

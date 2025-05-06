@@ -56,26 +56,399 @@
       </div>
 
       <!-- Filters -->
-      <div class="flex items-center gap-4 mt-6">
-        <div class="flex items-center">
-          <label class="font-semibold">Sorting by:</label>
+      <div class="mt-6">
+        <div class="flex items-center mb-2">
+          <label class="font-semibold">Filter & Sort:</label>
         </div>
-        <div class="flex gap-2">
-          <select class="p-2 border border-gray-300 rounded-md">
-            <option>Type</option>
-          </select>
-          <select class="p-2 border border-gray-300 rounded-md">
-            <option>Weaknesses</option>
-          </select>
-          <select class="p-2 border border-gray-300 rounded-md">
-            <option>Ability</option>
-          </select>
-          <select class="p-2 border border-gray-300 rounded-md">
-            <option>Height</option>
-          </select>
-          <select class="p-2 border border-gray-300 rounded-md">
-            <option>Weight</option>
-          </select>
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+          <!-- Type Filter -->
+          <div class="relative">
+            <button
+              @click="toggleFilterDropdown('type')"
+              class="w-full p-2 border border-gray-300 rounded-md flex justify-between items-center bg-white"
+            >
+              <span>Type</span>
+              <span
+                v-if="selectedTypes.length > 0"
+                class="bg-slate-500 text-white text-xs rounded-full px-2 py-0.5 ml-2"
+              >
+                {{ selectedTypes.length }}
+              </span>
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                class="h-4 w-4 ml-2"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M19 9l-7 7-7-7"
+                />
+              </svg>
+            </button>
+            <div
+              v-if="openFilterDropdown === 'type'"
+              class="absolute z-10 mt-1 w-full bg-white border border-gray-300 rounded-md shadow-lg p-2 max-h-60 overflow-y-auto"
+            >
+              <div
+                v-for="type in allPokemonTypes"
+                :key="type"
+                class="flex items-center p-1 hover:bg-gray-100"
+              >
+                <input
+                  type="checkbox"
+                  :id="'type-' + type"
+                  :value="type"
+                  v-model="selectedTypes"
+                  class="mr-2"
+                />
+                <label :for="'type-' + type" class="flex items-center cursor-pointer w-full">
+                  <span
+                    class="inline-block w-4 h-4 rounded-full mr-2"
+                    :class="getTypeClass(type)"
+                  ></span>
+                  <span class="capitalize">{{ type }}</span>
+                </label>
+              </div>
+              <div class="border-t border-gray-200 mt-2 pt-2 flex justify-between">
+                <button
+                  @click="clearFilter('type')"
+                  class="text-xs text-gray-600 hover:text-gray-800"
+                >
+                  Clear
+                </button>
+                <button
+                  @click="openFilterDropdown = null"
+                  class="text-xs text-blue-600 hover:text-blue-800"
+                >
+                  Apply
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Weaknesses Filter -->
+          <div class="relative">
+            <button
+              @click="toggleFilterDropdown('weakness')"
+              class="w-full p-2 border border-gray-300 rounded-md flex justify-between items-center bg-white"
+            >
+              <span>Weaknesses</span>
+              <span
+                v-if="selectedWeaknesses.length > 0"
+                class="bg-slate-500 text-white text-xs rounded-full px-2 py-0.5 ml-2"
+              >
+                {{ selectedWeaknesses.length }}
+              </span>
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                class="h-4 w-4 ml-2"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M19 9l-7 7-7-7"
+                />
+              </svg>
+            </button>
+            <div
+              v-if="openFilterDropdown === 'weakness'"
+              class="absolute z-10 mt-1 w-full bg-white border border-gray-300 rounded-md shadow-lg p-2 max-h-60 overflow-y-auto"
+            >
+              <div
+                v-for="type in allPokemonTypes"
+                :key="type"
+                class="flex items-center p-1 hover:bg-gray-100"
+              >
+                <input
+                  type="checkbox"
+                  :id="'weakness-' + type"
+                  :value="type"
+                  v-model="selectedWeaknesses"
+                  class="mr-2"
+                />
+                <label :for="'weakness-' + type" class="flex items-center cursor-pointer w-full">
+                  <span
+                    class="inline-block w-4 h-4 rounded-full mr-2"
+                    :class="getTypeClass(type)"
+                  ></span>
+                  <span class="capitalize">{{ type }}</span>
+                </label>
+              </div>
+              <div class="border-t border-gray-200 mt-2 pt-2 flex justify-between">
+                <button
+                  @click="clearFilter('weakness')"
+                  class="text-xs text-gray-600 hover:text-gray-800"
+                >
+                  Clear
+                </button>
+                <button
+                  @click="openFilterDropdown = null"
+                  class="text-xs text-blue-600 hover:text-blue-800"
+                >
+                  Apply
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Resistances Filter -->
+          <div class="relative">
+            <button
+              @click="toggleFilterDropdown('resistance')"
+              class="w-full p-2 border border-gray-300 rounded-md flex justify-between items-center bg-white"
+            >
+              <span>Resistances</span>
+              <span
+                v-if="selectedResistances.length > 0"
+                class="bg-slate-500 text-white text-xs rounded-full px-2 py-0.5 ml-2"
+              >
+                {{ selectedResistances.length }}
+              </span>
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                class="h-4 w-4 ml-2"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M19 9l-7 7-7-7"
+                />
+              </svg>
+            </button>
+            <div
+              v-if="openFilterDropdown === 'resistance'"
+              class="absolute z-10 mt-1 w-full bg-white border border-gray-300 rounded-md shadow-lg p-2 max-h-60 overflow-y-auto"
+            >
+              <div
+                v-for="type in allPokemonTypes"
+                :key="type"
+                class="flex items-center p-1 hover:bg-gray-100"
+              >
+                <input
+                  type="checkbox"
+                  :id="'resistance-' + type"
+                  :value="type"
+                  v-model="selectedResistances"
+                  class="mr-2"
+                />
+                <label :for="'resistance-' + type" class="flex items-center cursor-pointer w-full">
+                  <span
+                    class="inline-block w-4 h-4 rounded-full mr-2"
+                    :class="getTypeClass(type)"
+                  ></span>
+                  <span class="capitalize">{{ type }}</span>
+                </label>
+              </div>
+              <div class="border-t border-gray-200 mt-2 pt-2 flex justify-between">
+                <button
+                  @click="clearFilter('resistance')"
+                  class="text-xs text-gray-600 hover:text-gray-800"
+                >
+                  Clear
+                </button>
+                <button
+                  @click="openFilterDropdown = null"
+                  class="text-xs text-blue-600 hover:text-blue-800"
+                >
+                  Apply
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Height Sort -->
+          <div class="relative">
+            <button
+              @click="toggleFilterDropdown('height')"
+              class="w-full p-2 border border-gray-300 rounded-md flex justify-between items-center bg-white"
+            >
+              <span>Height</span>
+              <span v-if="heightSort !== 'none'" class="text-blue-600 text-xs ml-2">
+                {{ heightSort === 'asc' ? '↑' : '↓' }}
+              </span>
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                class="h-4 w-4 ml-2"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M19 9l-7 7-7-7"
+                />
+              </svg>
+            </button>
+            <div
+              v-if="openFilterDropdown === 'height'"
+              class="absolute z-10 mt-1 w-full bg-white border border-gray-300 rounded-md shadow-lg p-2"
+            >
+              <div class="flex flex-col">
+                <button
+                  @click="setHeightSort('none')"
+                  class="p-2 text-left hover:bg-gray-100 rounded"
+                  :class="{ 'bg-gray-100': heightSort === 'none' }"
+                >
+                  No sorting
+                </button>
+                <button
+                  @click="setHeightSort('asc')"
+                  class="p-2 text-left hover:bg-gray-100 rounded"
+                  :class="{ 'bg-gray-100': heightSort === 'asc' }"
+                >
+                  Shortest first
+                </button>
+                <button
+                  @click="setHeightSort('desc')"
+                  class="p-2 text-left hover:bg-gray-100 rounded"
+                  :class="{ 'bg-gray-100': heightSort === 'desc' }"
+                >
+                  Tallest first
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Weight Sort -->
+          <div class="relative">
+            <button
+              @click="toggleFilterDropdown('weight')"
+              class="w-full p-2 border border-gray-300 rounded-md flex justify-between items-center bg-white"
+            >
+              <span>Weight</span>
+              <span v-if="weightSort !== 'none'" class="text-blue-600 text-xs ml-2">
+                {{ weightSort === 'asc' ? '↑' : '↓' }}
+              </span>
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                class="h-4 w-4 ml-2"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M19 9l-7 7-7-7"
+                />
+              </svg>
+            </button>
+            <div
+              v-if="openFilterDropdown === 'weight'"
+              class="absolute z-10 mt-1 w-full bg-white border border-gray-300 rounded-md shadow-lg p-2"
+            >
+              <div class="flex flex-col">
+                <button
+                  @click="setWeightSort('none')"
+                  class="p-2 text-left hover:bg-gray-100 rounded"
+                  :class="{ 'bg-gray-100': weightSort === 'none' }"
+                >
+                  No sorting
+                </button>
+                <button
+                  @click="setWeightSort('asc')"
+                  class="p-2 text-left hover:bg-gray-100 rounded"
+                  :class="{ 'bg-gray-100': weightSort === 'asc' }"
+                >
+                  Lightest first
+                </button>
+                <button
+                  @click="setWeightSort('desc')"
+                  class="p-2 text-left hover:bg-gray-100 rounded"
+                  :class="{ 'bg-gray-100': weightSort === 'desc' }"
+                >
+                  Heaviest first
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Active Filters Display -->
+        <div v-if="hasActiveFilters" class="mt-3 flex flex-wrap gap-2">
+          <div
+            v-for="(type, index) in selectedTypes"
+            :key="`type-${index}`"
+            class="bg-gray-200 px-2 py-1 rounded-full text-xs flex items-center"
+          >
+            <span class="inline-block w-3 h-3 rounded-full mr-1" :class="getTypeClass(type)"></span>
+            <span class="capitalize">{{ type }}</span>
+            <button
+              @click="removeFilter('type', type)"
+              class="ml-1 text-gray-500 hover:text-gray-700"
+            >
+              ×
+            </button>
+          </div>
+          <div
+            v-for="(type, index) in selectedWeaknesses"
+            :key="`weakness-${index}`"
+            class="bg-gray-200 px-2 py-1 rounded-full text-xs flex items-center"
+          >
+            <span>Weak to</span>
+            <span class="inline-block w-3 h-3 rounded-full mx-1" :class="getTypeClass(type)"></span>
+            <span class="capitalize">{{ type }}</span>
+            <button
+              @click="removeFilter('weakness', type)"
+              class="ml-1 text-gray-500 hover:text-gray-700"
+            >
+              ×
+            </button>
+          </div>
+          <div
+            v-for="(type, index) in selectedResistances"
+            :key="`resistance-${index}`"
+            class="bg-gray-200 px-2 py-1 rounded-full text-xs flex items-center"
+          >
+            <span>Resists</span>
+            <span class="inline-block w-3 h-3 rounded-full mx-1" :class="getTypeClass(type)"></span>
+            <span class="capitalize">{{ type }}</span>
+            <button
+              @click="removeFilter('resistance', type)"
+              class="ml-1 text-gray-500 hover:text-gray-700"
+            >
+              ×
+            </button>
+          </div>
+          <div
+            v-if="heightSort !== 'none'"
+            class="bg-gray-200 px-2 py-1 rounded-full text-xs flex items-center"
+          >
+            <span>Height: {{ heightSort === 'asc' ? 'Shortest first' : 'Tallest first' }}</span>
+            <button @click="setHeightSort('none')" class="ml-1 text-gray-500 hover:text-gray-700">
+              ×
+            </button>
+          </div>
+          <div
+            v-if="weightSort !== 'none'"
+            class="bg-gray-200 px-2 py-1 rounded-full text-xs flex items-center"
+          >
+            <span>Weight: {{ weightSort === 'asc' ? 'Lightest first' : 'Heaviest first' }}</span>
+            <button @click="setWeightSort('none')" class="ml-1 text-gray-500 hover:text-gray-700">
+              ×
+            </button>
+          </div>
+          <button
+            @click="clearAllFilters"
+            class="bg-red-500 text-white px-2 py-1 rounded-full text-xs"
+          >
+            Clear All Filters
+          </button>
         </div>
       </div>
 
@@ -360,7 +733,7 @@
           </div>
         </div>
         <!-- Left Grid -->
-        <div class="flex-1 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
+        <div class="flex-1 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
           <div
             v-if="filteredPokemonList.length === 0 && searchkey.trim()"
             class="col-span-1 sm:col-span-2 lg:col-span-3 text-center py-10"
@@ -375,25 +748,29 @@
           <div
             v-for="item in filteredPokemonList"
             :key="item.id"
-            class="bg-white p-3 rounded-lg shadow-md flex flex-col items-center relative cursor-pointer transform transition-transform duration-300 hover:scale-105"
+            class="bg-white p-4 rounded-lg shadow-md flex flex-col items-center relative cursor-pointer transform transition-transform duration-300 hover:scale-105 h-[220px] w-full"
             @click="selectPokemon(item)"
           >
-            <img
-              :src="getPokemonImageUrl(item)"
-              :alt="item.name"
-              class="w-20 h-20 object-contain"
-              @error="(e) => handleImageError(e, item.id)"
-            />
-            <div class="capitalize font-bold mb-2">{{ item.name }}</div>
-            <div class="flex gap-2 justify-center">
-              <span
-                v-for="(typeObj, index) in item.types"
-                :key="index"
-                class="text-xs px-2 py-1 rounded-full font-semibold capitalize"
-                :class="getTypeClass(typeObj.type.name)"
-              >
-                {{ typeObj.type.name }}
-              </span>
+            <div class="flex-1 flex items-center justify-center w-full h-[100px]">
+              <img
+                :src="getPokemonImageUrl(item)"
+                :alt="item.name"
+                class="w-24 h-24 object-contain"
+                @error="(e) => handleImageError(e, item.id)"
+              />
+            </div>
+            <div class="w-full mt-2">
+              <div class="capitalize font-bold mb-2 text-center truncate">{{ item.name }}</div>
+              <div class="flex gap-2 justify-center flex-wrap">
+                <span
+                  v-for="(typeObj, index) in item.types"
+                  :key="index"
+                  class="text-xs px-2 py-1 rounded-full font-semibold capitalize inline-block"
+                  :class="getTypeClass(typeObj.type.name)"
+                >
+                  {{ typeObj.type.name }}
+                </span>
+              </div>
             </div>
           </div>
         </div>
@@ -689,6 +1066,36 @@ const evolutionChain = ref<EvolutionChain | null>(null) // ข้อมูล ev
 const isMobileView = ref(false) // ตรวจสอบว่าเป็นหน้าจอขนาดเล็กหรือไม่
 const showMobileDetail = ref(false) // ควบคุมการแสดง/ซ่อน popup
 
+// ตัวแปรสำหรับการกรองและเรียงลำดับ
+const openFilterDropdown = ref<string | null>(null) // ควบคุมการแสดง/ซ่อน dropdown
+const selectedTypes = ref<string[]>([]) // ประเภทที่เลือกสำหรับกรอง
+const selectedWeaknesses = ref<string[]>([]) // ความอ่อนแอที่เลือกสำหรับกรอง
+const selectedResistances = ref<string[]>([]) // ความต้านทานที่เลือกสำหรับกรอง
+const heightSort = ref<'none' | 'asc' | 'desc'>('none') // การเรียงลำดับตามความสูง
+const weightSort = ref<'none' | 'asc' | 'desc'>('none') // การเรียงลำดับตามน้ำหนัก
+
+// รายการประเภททั้งหมดของ Pokemon
+const allPokemonTypes = [
+  'normal',
+  'fire',
+  'water',
+  'electric',
+  'grass',
+  'ice',
+  'fighting',
+  'poison',
+  'ground',
+  'flying',
+  'psychic',
+  'bug',
+  'rock',
+  'ghost',
+  'dragon',
+  'dark',
+  'steel',
+  'fairy',
+]
+
 // ฟังก์ชันสำหรับปิด popup บนมือถือ
 const closeMobileDetail = () => {
   showMobileDetail.value = false
@@ -703,7 +1110,352 @@ const checkScreenSize = () => {
 onMounted(() => {
   checkScreenSize()
   window.addEventListener('resize', checkScreenSize)
+
+  // เพิ่ม event listener สำหรับการคลิกนอก dropdown เพื่อปิด dropdown
+  document.addEventListener('click', (event) => {
+    if (openFilterDropdown.value && !(event.target as Element).closest('.relative')) {
+      openFilterDropdown.value = null
+    }
+  })
 })
+
+// ฟังก์ชันสำหรับเปิด/ปิด dropdown
+const toggleFilterDropdown = (type: string) => {
+  if (openFilterDropdown.value === type) {
+    openFilterDropdown.value = null
+  } else {
+    openFilterDropdown.value = type
+  }
+}
+
+// ฟังก์ชันสำหรับล้างตัวกรองประเภท
+const clearFilter = (filterType: string) => {
+  if (filterType === 'type') {
+    selectedTypes.value = []
+  } else if (filterType === 'weakness') {
+    selectedWeaknesses.value = []
+  } else if (filterType === 'resistance') {
+    selectedResistances.value = []
+  }
+}
+
+// ฟังก์ชันสำหรับลบตัวกรองเดี่ยว
+const removeFilter = (filterType: string, value: string) => {
+  if (filterType === 'type') {
+    selectedTypes.value = selectedTypes.value.filter((type) => type !== value)
+  } else if (filterType === 'weakness') {
+    selectedWeaknesses.value = selectedWeaknesses.value.filter((type) => type !== value)
+  } else if (filterType === 'resistance') {
+    selectedResistances.value = selectedResistances.value.filter((type) => type !== value)
+  }
+}
+
+// ฟังก์ชันสำหรับล้างตัวกรองทั้งหมด
+const clearAllFilters = () => {
+  selectedTypes.value = []
+  selectedWeaknesses.value = []
+  selectedResistances.value = []
+  heightSort.value = 'none'
+  weightSort.value = 'none'
+}
+
+// ฟังก์ชันสำหรับตั้งค่าการเรียงลำดับตามความสูง
+const setHeightSort = (sort: 'none' | 'asc' | 'desc') => {
+  heightSort.value = sort
+  if (sort !== 'none') {
+    weightSort.value = 'none' // ยกเลิกการเรียงลำดับตามน้ำหนักเมื่อเรียงลำดับตามความสูง
+  }
+  openFilterDropdown.value = null
+}
+
+// ฟังก์ชันสำหรับตั้งค่าการเรียงลำดับตามน้ำหนัก
+const setWeightSort = (sort: 'none' | 'asc' | 'desc') => {
+  weightSort.value = sort
+  if (sort !== 'none') {
+    heightSort.value = 'none' // ยกเลิกการเรียงลำดับตามความสูงเมื่อเรียงลำดับตามน้ำหนัก
+  }
+  openFilterDropdown.value = null
+}
+
+// ตรวจสอบว่า Pokemon มีความอ่อนแอต่อประเภทที่ระบุหรือไม่
+const hasPokemonWeakness = (pokemon: PokemonDetail, weaknessType: string): boolean => {
+  // ดึงข้อมูลประเภทของ Pokemon
+  const pokemonTypes = pokemon.types?.map((t) => t.type.name) || []
+
+  // ตรวจสอบความอ่อนแอโดยใช้ตารางความสัมพันธ์ของประเภท
+  let effectiveness = 1
+
+  // ตารางความสัมพันธ์ของประเภท (ย่อ)
+  const typeRelations: Record<
+    string,
+    { weakTo: string[]; resistantTo: string[]; immuneTo: string[] }
+  > = {
+    normal: {
+      weakTo: ['fighting'],
+      resistantTo: [],
+      immuneTo: ['ghost'],
+    },
+    fire: {
+      weakTo: ['water', 'ground', 'rock'],
+      resistantTo: ['fire', 'grass', 'ice', 'bug', 'steel', 'fairy'],
+      immuneTo: [],
+    },
+    water: {
+      weakTo: ['electric', 'grass'],
+      resistantTo: ['fire', 'water', 'ice', 'steel'],
+      immuneTo: [],
+    },
+    electric: {
+      weakTo: ['ground'],
+      resistantTo: ['electric', 'flying', 'steel'],
+      immuneTo: [],
+    },
+    grass: {
+      weakTo: ['fire', 'ice', 'poison', 'flying', 'bug'],
+      resistantTo: ['water', 'electric', 'grass', 'ground'],
+      immuneTo: [],
+    },
+    ice: {
+      weakTo: ['fire', 'fighting', 'rock', 'steel'],
+      resistantTo: ['ice'],
+      immuneTo: [],
+    },
+    fighting: {
+      weakTo: ['flying', 'psychic', 'fairy'],
+      resistantTo: ['bug', 'rock', 'dark'],
+      immuneTo: [],
+    },
+    poison: {
+      weakTo: ['ground', 'psychic'],
+      resistantTo: ['grass', 'fighting', 'poison', 'bug', 'fairy'],
+      immuneTo: [],
+    },
+    ground: {
+      weakTo: ['water', 'grass', 'ice'],
+      resistantTo: ['poison', 'rock'],
+      immuneTo: ['electric'],
+    },
+    flying: {
+      weakTo: ['electric', 'ice', 'rock'],
+      resistantTo: ['grass', 'fighting', 'bug'],
+      immuneTo: ['ground'],
+    },
+    psychic: {
+      weakTo: ['bug', 'ghost', 'dark'],
+      resistantTo: ['fighting', 'psychic'],
+      immuneTo: [],
+    },
+    bug: {
+      weakTo: ['fire', 'flying', 'rock'],
+      resistantTo: ['grass', 'fighting', 'ground'],
+      immuneTo: [],
+    },
+    rock: {
+      weakTo: ['water', 'grass', 'fighting', 'ground', 'steel'],
+      resistantTo: ['normal', 'fire', 'poison', 'flying'],
+      immuneTo: [],
+    },
+    ghost: {
+      weakTo: ['ghost', 'dark'],
+      resistantTo: ['poison', 'bug'],
+      immuneTo: ['normal', 'fighting'],
+    },
+    dragon: {
+      weakTo: ['ice', 'dragon', 'fairy'],
+      resistantTo: ['fire', 'water', 'electric', 'grass'],
+      immuneTo: [],
+    },
+    dark: {
+      weakTo: ['fighting', 'bug', 'fairy'],
+      resistantTo: ['ghost', 'dark'],
+      immuneTo: ['psychic'],
+    },
+    steel: {
+      weakTo: ['fire', 'fighting', 'ground'],
+      resistantTo: [
+        'normal',
+        'grass',
+        'ice',
+        'flying',
+        'psychic',
+        'bug',
+        'rock',
+        'dragon',
+        'steel',
+        'fairy',
+      ],
+      immuneTo: ['poison'],
+    },
+    fairy: {
+      weakTo: ['poison', 'steel'],
+      resistantTo: ['fighting', 'bug', 'dark'],
+      immuneTo: ['dragon'],
+    },
+  }
+
+  // คำนวณความอ่อนแอ
+  for (const type of pokemonTypes) {
+    if (typeRelations[type]?.immuneTo.includes(weaknessType)) {
+      return false // ถ้ามีภูมิคุ้มกันต่อประเภทนี้ จะไม่มีความอ่อนแอ
+    }
+
+    if (typeRelations[type]?.resistantTo.includes(weaknessType)) {
+      effectiveness *= 0.5 // ต้านทาน
+    }
+
+    if (typeRelations[type]?.weakTo.includes(weaknessType)) {
+      effectiveness *= 2 // อ่อนแอ
+    }
+  }
+
+  return effectiveness > 1 // ถ้า effectiveness > 1 แสดงว่ามีความอ่อนแอต่อประเภทนี้
+}
+
+// ตรวจสอบว่า Pokemon มีความต้านทานต่อประเภทที่ระบุหรือไม่
+const hasPokemonResistance = (pokemon: PokemonDetail, resistanceType: string): boolean => {
+  // ดึงข้อมูลประเภทของ Pokemon
+  const pokemonTypes = pokemon.types?.map((t) => t.type.name) || []
+
+  // ตรวจสอบความต้านทานโดยใช้ตารางความสัมพันธ์ของประเภท
+  let effectiveness = 1
+
+  // ใช้ตารางความสัมพันธ์เดียวกับ hasPokemonWeakness
+  const typeRelations: Record<
+    string,
+    { weakTo: string[]; resistantTo: string[]; immuneTo: string[] }
+  > = {
+    normal: {
+      weakTo: ['fighting'],
+      resistantTo: [],
+      immuneTo: ['ghost'],
+    },
+    fire: {
+      weakTo: ['water', 'ground', 'rock'],
+      resistantTo: ['fire', 'grass', 'ice', 'bug', 'steel', 'fairy'],
+      immuneTo: [],
+    },
+    water: {
+      weakTo: ['electric', 'grass'],
+      resistantTo: ['fire', 'water', 'ice', 'steel'],
+      immuneTo: [],
+    },
+    electric: {
+      weakTo: ['ground'],
+      resistantTo: ['electric', 'flying', 'steel'],
+      immuneTo: [],
+    },
+    grass: {
+      weakTo: ['fire', 'ice', 'poison', 'flying', 'bug'],
+      resistantTo: ['water', 'electric', 'grass', 'ground'],
+      immuneTo: [],
+    },
+    ice: {
+      weakTo: ['fire', 'fighting', 'rock', 'steel'],
+      resistantTo: ['ice'],
+      immuneTo: [],
+    },
+    fighting: {
+      weakTo: ['flying', 'psychic', 'fairy'],
+      resistantTo: ['bug', 'rock', 'dark'],
+      immuneTo: [],
+    },
+    poison: {
+      weakTo: ['ground', 'psychic'],
+      resistantTo: ['grass', 'fighting', 'poison', 'bug', 'fairy'],
+      immuneTo: [],
+    },
+    ground: {
+      weakTo: ['water', 'grass', 'ice'],
+      resistantTo: ['poison', 'rock'],
+      immuneTo: ['electric'],
+    },
+    flying: {
+      weakTo: ['electric', 'ice', 'rock'],
+      resistantTo: ['grass', 'fighting', 'bug'],
+      immuneTo: ['ground'],
+    },
+    psychic: {
+      weakTo: ['bug', 'ghost', 'dark'],
+      resistantTo: ['fighting', 'psychic'],
+      immuneTo: [],
+    },
+    bug: {
+      weakTo: ['fire', 'flying', 'rock'],
+      resistantTo: ['grass', 'fighting', 'ground'],
+      immuneTo: [],
+    },
+    rock: {
+      weakTo: ['water', 'grass', 'fighting', 'ground', 'steel'],
+      resistantTo: ['normal', 'fire', 'poison', 'flying'],
+      immuneTo: [],
+    },
+    ghost: {
+      weakTo: ['ghost', 'dark'],
+      resistantTo: ['poison', 'bug'],
+      immuneTo: ['normal', 'fighting'],
+    },
+    dragon: {
+      weakTo: ['ice', 'dragon', 'fairy'],
+      resistantTo: ['fire', 'water', 'electric', 'grass'],
+      immuneTo: [],
+    },
+    dark: {
+      weakTo: ['fighting', 'bug', 'fairy'],
+      resistantTo: ['ghost', 'dark'],
+      immuneTo: ['psychic'],
+    },
+    steel: {
+      weakTo: ['fire', 'fighting', 'ground'],
+      resistantTo: [
+        'normal',
+        'grass',
+        'ice',
+        'flying',
+        'psychic',
+        'bug',
+        'rock',
+        'dragon',
+        'steel',
+        'fairy',
+      ],
+      immuneTo: ['poison'],
+    },
+    fairy: {
+      weakTo: ['poison', 'steel'],
+      resistantTo: ['fighting', 'bug', 'dark'],
+      immuneTo: ['dragon'],
+    },
+  }
+
+  // คำนวณความต้านทาน
+  for (const type of pokemonTypes) {
+    if (typeRelations[type]?.immuneTo.includes(resistanceType)) {
+      return true // ถ้ามีภูมิคุ้มกันต่อประเภทนี้ ถือว่ามีความต้านทาน
+    }
+
+    if (typeRelations[type]?.resistantTo.includes(resistanceType)) {
+      effectiveness *= 0.5 // ต้านทาน
+    }
+
+    if (typeRelations[type]?.weakTo.includes(resistanceType)) {
+      effectiveness *= 2 // อ่อนแอ
+    }
+  }
+
+  return effectiveness < 1 // ถ้า effectiveness < 1 แสดงว่ามีความต้านทานต่อประเภทนี้
+}
+
+// ตรวจสอบว่ามีตัวกรองที่ใช้งานอยู่หรือไม่
+const hasActiveFilters = computed(() => {
+  return (
+    selectedTypes.value.length > 0 ||
+    selectedWeaknesses.value.length > 0 ||
+    selectedResistances.value.length > 0 ||
+    heightSort.value !== 'none' ||
+    weightSort.value !== 'none'
+  )
+})
+
 // ข้อมูลความสัมพันธ์ของธาตุ
 interface TypeEffectiveness {
   type: string
@@ -713,17 +1465,68 @@ interface TypeEffectiveness {
 const typeWeaknesses = ref<TypeEffectiveness[]>([]) // ประเภทที่ Pokemon นี้แพ้ (effectiveness > 1)
 const typeResistances = ref<TypeEffectiveness[]>([]) // ประเภทที่ Pokemon ต้านทาน (effectiveness < 1)
 
-// Computed
+// Computed สำหรับกรองและเรียงลำดับ Pokemon
 const filteredPokemonList = computed(() => {
-  if (!searchkey.value.trim()) {
-    return fullPokemonList.value // ไม่มี search ให้โชว์ทั้งหมด
+  let result = [...fullPokemonList.value]
+
+  // กรองตามคำค้นหา
+  if (searchkey.value.trim()) {
+    const keyword = searchkey.value.toLowerCase().trim()
+    result = result.filter(
+      (pokemon) =>
+        pokemon.name.toLowerCase().includes(keyword) || pokemon.id.toString().includes(keyword),
+    )
   }
 
-  const keyword = searchkey.value.toLowerCase().trim() //ปรับเป็นตัวเล็กเอาช่องว่างออก
-  return fullPokemonList.value.filter(
-    (pokemon) =>
-      pokemon.name.toLowerCase().includes(keyword) || pokemon.id.toString().includes(keyword),
-  )
+  // กรองตามประเภท
+  if (selectedTypes.value.length > 0) {
+    result = result.filter((pokemon) => {
+      const pokemonTypes = pokemon.types?.map((t) => t.type.name) || []
+      return selectedTypes.value.some((type) => pokemonTypes.includes(type))
+    })
+  }
+
+  // กรองตามความอ่อนแอ
+  if (selectedWeaknesses.value.length > 0) {
+    result = result.filter((pokemon) => {
+      return selectedWeaknesses.value.some((weaknessType) =>
+        hasPokemonWeakness(pokemon, weaknessType),
+      )
+    })
+  }
+
+  // กรองตามความต้านทาน
+  if (selectedResistances.value.length > 0) {
+    result = result.filter((pokemon) => {
+      return selectedResistances.value.some((resistanceType) =>
+        hasPokemonResistance(pokemon, resistanceType),
+      )
+    })
+  }
+
+  // เรียงลำดับตามความสูง
+  if (heightSort.value !== 'none') {
+    result.sort((a, b) => {
+      if (heightSort.value === 'asc') {
+        return a.height - b.height
+      } else {
+        return b.height - a.height
+      }
+    })
+  }
+
+  // เรียงลำดับตามน้ำหนัก
+  if (weightSort.value !== 'none') {
+    result.sort((a, b) => {
+      if (weightSort.value === 'asc') {
+        return a.weight - b.weight
+      } else {
+        return b.weight - a.weight
+      }
+    })
+  }
+
+  return result
 })
 
 const all1025Pokemon = async () => {
