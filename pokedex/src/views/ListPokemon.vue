@@ -1531,7 +1531,7 @@ const filteredPokemonList = computed(() => {
 
 const all1025Pokemon = async () => {
   // ฟังก์ชั่นใหญ่ที่ต้องใส่ await first150Pokemon() เพื่อรอให้เสร็จ
-  const limit = 150 //จํานวน pokemon ที่ต้องการสูงสุด 150 ตัว max 1025
+  const limit = 1025 //จํานวน pokemon ที่ต้องการสูงสุด 150 ตัว max 1025
   const allPokemon = []
 
   for (let id = 1; id <= limit; id++) {
