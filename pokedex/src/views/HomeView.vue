@@ -1,5 +1,8 @@
 <template>
-  <div class="min-h-screen bg-white">
+  <div
+    class="min-h-screen bg-gray-100 font-sans text-black"
+    style="font-family: 'Inter', 'Segoe UI', 'Arial', 'sans-serif'"
+  >
     <MainWeb></MainWeb>
 
     <!-- Hero Section -->

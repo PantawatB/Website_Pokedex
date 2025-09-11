@@ -1,5 +1,8 @@
 <template>
-  <div class="min-h-screen bg-gray-100">
+  <div
+    class="min-h-screen bg-gray-100 font-sans text-black"
+    style="font-family: 'Inter', 'Segoe UI', 'Arial', 'sans-serif'"
+  >
     <MainWeb></MainWeb>
 
     <div class="bg-gray-100 grid grid-cols-1 md:grid-cols-2 gap-4 p-10 items-center">

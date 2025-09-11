@@ -1,5 +1,8 @@
 <template>
-  <div class="min-h-screen bg-gray-100">
+  <div
+    class="min-h-screen bg-gray-100 font-sans text-black"
+    style="font-family: 'Inter', 'Segoe UI', 'Arial', 'sans-serif'"
+  >
     <!-- Navbar -->
     <MainWeb></MainWeb>
 
